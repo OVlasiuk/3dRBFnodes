@@ -40,6 +40,10 @@ for i=1:N^dim
         end
     nodes = writeNodes(nodes, current_box, i);
 
+    %evaluation_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
+    %fun_values = cellfun(@density, evaluation_pts);
+    %current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, floor(max_nodes_per_box*mean(fun_values)));
+    %nodes = writeNodes(nodes, current_box, i);
 end
 
 
@@ -66,7 +70,7 @@ plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
 
 
 k_value = 15;           % number of nearest neighbors used in the knnsearch
-repel_steps = 5;
+repel_steps = 8;
 
 cnf = repel(cnf, k_value, repel_steps);
 

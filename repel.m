@@ -10,7 +10,8 @@ forces = zeros(size(cnf));
 fprintf( 'Minimal separation before repulsion:      %f\n',  min(D(:,2)) )
 fprintf( 'Mean separation before repulsion:      %f\n',  mean(D(:,2)) )
 figure(3);
-histogram(D(:,2),50);
+h1=histogram(D(:,2),50);
+h1.FaceColor = [0 0 0.8];
 hold on;
 
 % force_i = zeros(k_value, 3);              
@@ -30,6 +31,7 @@ end
 
 [~, D] = knnsearch(cnf, cnf, 'k', k_value+1);   
 
-fprintf( 'Minimal separation before repulsion:      %f\n',  min(D(:,2)) )
+fprintf( 'Minimal separation after:      %f\n',  min(D(:,2)) )
 fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
-histogram(D(:,2),50);
+h2 = histogram(D(:,2),50);
+h2.FaceColor = [0.8 0 0];

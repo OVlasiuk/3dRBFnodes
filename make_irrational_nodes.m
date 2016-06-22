@@ -1,4 +1,4 @@
-function points = irrational_nodes(corner1, corner2, num)
+function points = make_irrational_nodes(corner1, corner2, num)
 
 diagonal = corner2-corner1;
 points = zeros(num,3);
