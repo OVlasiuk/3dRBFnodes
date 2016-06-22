@@ -1,5 +1,5 @@
 function X = writeNodes(X, box, index)
 
-l = size(box,2)+1;
-X(:,1,index) = X(:,1,index) + size(box,2);
-X(:,2:l,index) = box;
+l = size(box,1)+1;
+X(index,1,:) = X(index, 1, :) + size(box,1);
+X(index, 2:l, :) = box;
