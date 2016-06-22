@@ -16,7 +16,7 @@ end
 
 N = 15; %    number of boxes per side of the cube
 
-max_nodes_per_box = 20;  %00;
+max_nodes_per_box = 40;  %00;
 tolerance = 1e-4;
 
 
@@ -30,13 +30,19 @@ tic
 
 for i=1:N^dim
     corners(i,:) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];
-    evaluation_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
-    fun_values = cellfun(@density, evaluation_pts);
-%     if max(fun_values)-min(fun_values) > tolerance
-        current_box = irrational_nodes(corners(i,:), corners(i,:)+1/N, floor(max_nodes_per_box*mean(fun_values)));
-        nodes = writeNodes(nodes, current_box, i);
-%     end       %  run this block if density does not vary much, else - use
-%                  directed density
+    eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
+    fun_values = cellfun(@density, eval_pts);
+    [max_dens, ind1] = max(fun_values);
+    [min_dens, ind2] = min(fun_values);
+    radius = 1/(1+3/2*min_dens);
+
+    current_box = make_fcc_scaled(corners(i,:), corners(i,:)+1/N, radius, max_dens/min_dens,cell2mat(eval_pts(ind1)),cell2mat(eval_pts(ind2)));
+        if(size(current_box,1)>max_nodes_per_box)
+            fprintf ('Warning: Nodes in box exceeds maximum. Consider raising maximum or adjusting radius function')
+            return
+        end
+    nodes = writeNodes(nodes, current_box, i);
+
 end
 
 
@@ -68,7 +74,7 @@ plot3(nodes_consecutive(:,1), nodes_consecutive(:,2), nodes_consecutive(:,3),  '
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;
 
- cnf = nodes_consecutive;
+cnf = nodes_consecutive;
 
 IDX = knnsearch(cnf, cnf, 'k', k_value+1);
 forces = zeros(size(cnf,1), size(cnf,2));        
