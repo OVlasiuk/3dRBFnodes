@@ -70,7 +70,7 @@ repel_steps = 1;
 
 cnf = nodes_consecutive;
 
-[IDX] = knnsearch(cnf, cnf, 'k', k_value+1);
+IDX = knnsearch(cnf, cnf, 'k', k_value+1);
 forces = zeros(size(cnf,1), size(cnf,2));        
 
 for iter=1:repel_steps
