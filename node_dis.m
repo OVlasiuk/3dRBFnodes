@@ -68,7 +68,7 @@ plot3(nodes_consecutive(:,1), nodes_consecutive(:,2), nodes_consecutive(:,3),  '
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;
 
-cnf = nodes_consecutive;
+ cnf = nodes_consecutive;
 
 IDX = knnsearch(cnf, cnf, 'k', k_value+1);
 forces = zeros(size(cnf,1), size(cnf,2));        
