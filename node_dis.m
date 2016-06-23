@@ -13,7 +13,7 @@ for i=0:1
     end
 end
 
-N = 10; %    number of boxes per side of the cube
+N = 25; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;        % number of iterations of the repulsion procedure
@@ -27,10 +27,10 @@ tic
 
 for i=1:N^dim
     corners(i,:) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];   % TODO
-    eval_pts = num2cell(bsxfun(@plus, corners(i,1:2), cube_vectors(:,1:2)/N),2);
+    eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
 %     eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
 %     fun_values = cellfun(@density, eval_pts);
-    fun_values = cellfun(@trui, eval_pts);
+    fun_values = cellfun(@slanttrui, eval_pts);
 % % % % % % % %            
 % % % %     fcc-lattice 
 %     [max_dens, ind1] = max(fun_values);
