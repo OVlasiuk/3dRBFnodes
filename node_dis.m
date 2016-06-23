@@ -13,7 +13,7 @@ for i=0:1
     end
 end
 
-N = 40; %    number of boxes per side of the cube
+N = 30; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;        % number of iterations of the repulsion procedure
@@ -44,10 +44,14 @@ for i=1:N^dim
 %         end    
 % % % % % % % %      
 % % % % %   irrational nodes
-    current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, floor(max_nodes_per_box * mean(fun_values)));   
+    current_num_nodes = max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values));
+    current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, current_num_nodes);   
 % % % % % % %     
-
-    nodes = writeNodes(nodes, current_box, i);
+    node = zeros(max_nodes_per_box+1,dim);
+    l = current_num_nodes+1;
+    node(1,:) = node(1, :) + current_num_nodes;
+    node(2:l, :) = current_box;
+    nodes(i,:,:) = node;
 end
 
 
@@ -74,7 +78,7 @@ plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
 
 
 
-cnf = repel(cnf, k_value, repel_steps);
+% cnf = repel(cnf, k_value, repel_steps);
 toc 
 
 pbaspect([1 1 1])

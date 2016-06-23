@@ -1,5 +1,7 @@
 dim = 3;
 oct = 2^dim;
+N = 30; %    number of boxes per side of the cube
+max_nodes_per_box = 20; 
 % 
 % vertices of the unit cube
 cube_vectors = zeros(oct,3);
@@ -12,26 +14,22 @@ for i=0:1
         end
     end
 end
-
-N = 40; %    number of boxes per side of the cube
-
-max_nodes_per_box = 20; 
-tolerance = 1e-4;
-
+% % % % % % % % % % % % % % % % % % 
 
 corners = -ones(N^dim,dim);
-nodes = zeros(N^dim, max_nodes_per_box+1,dim); % the first element or vector will contain the number 
-                    %  of nodes in the current box
+nodes = zeros(N^dim, max_nodes_per_box+1,dim); % the vector (n,1,:) will contain the number 
+                    %  of nodes in the n-th box
                     
 tic
-
 parfor i=1:N^dim
     corners(i,:) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];   % TODO
-    eval_pts = num2cell(bsxfun(@plus, corners(i,1:2), cube_vectors(:,1:2)/N),2);
+    corner = corners(i,:);
+    eval_pts = num2cell(bsxfun(@plus, corner(1:2), cube_vectors(:,1:2)/N),2);
 %     eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
 %     fun_values = cellfun(@density, eval_pts);
     fun_values = cellfun(@trui, eval_pts);
- % % % % % % % %            
+% % % % % % % %            
+% % % %     fcc-lattice 
 %     [max_dens, ind1] = max(fun_values);
 %     [min_dens, ind2] = min(fun_values);
 %     radius_min = 2/(2+3*max_dens);
@@ -41,11 +39,16 @@ parfor i=1:N^dim
 %             fprintf ('Warning: Nodes in box exceeds maximum. Consider raising maximum or adjusting radius function')
 %             break
 %         end    
-% % % % % % % %             
-    current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, floor(max_nodes_per_box * mean(fun_values)));   
-% % % % % % %     
-
-    nodes = writeNodes(nodes, current_box, i);
+% % % % % % % %      
+% % % % %   irrational nodes       
+    current_num_nodes = max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values));
+    current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, current_num_nodes);   
+% % % % % % % 
+    node = zeros(max_nodes_per_box+1,dim);
+    l = current_num_nodes+1;
+    node(1,:) = node(1, :) + current_num_nodes;
+    node(2:l, :) = current_box;
+    nodes(i,:,:) = node;
 end
 
 
