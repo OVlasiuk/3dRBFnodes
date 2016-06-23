@@ -13,7 +13,7 @@ for i=0:1
     end
 end
 
-N = 25; %    number of boxes per side of the cube
+N = 15; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;        % number of iterations of the repulsion procedure
@@ -72,15 +72,17 @@ end
 % % % % % % % % % % % % % 
 
 pbaspect([1 1 1])
+view([1 1 1])
 figure(1);
 fprintf( 'Number of nodes:      %d\n\n',  num_nodes )
 plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
 
 
 
-% cnf = repel(cnf, k_value, repel_steps);
+ cnf = repel(cnf, k_value, repel_steps);
 toc 
 
 pbaspect([1 1 1])
+view([1 1 1])
 figure(2);
 plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
