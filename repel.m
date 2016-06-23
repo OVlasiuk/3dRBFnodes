@@ -9,8 +9,8 @@ forces = zeros(size(cnf));
 fprintf( 'Minimal separation before repulsion:      %f\n',  min(D(:,2)) )
 fprintf( 'Mean separation before repulsion:      %f\n',  mean(D(:,2)) )
 figure(3);
-h1=histogram(D(:,2),bins);
-h1.FaceColor = [0 0 0.9];
+%h1=histogram(D(:,2),bins);
+%h1.FaceColor = [0 0 0.9];
 hold on;
 
 for iter=1:repel_steps
@@ -31,6 +31,6 @@ end
 
 fprintf( 'Minimal separation after:      %f\n',  min(D(:,2)) )
 fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
-h2 = histogram(D(:,2),bins);
-h2.FaceColor = [0.9 0 0];
+%h2 = histogram(D(:,2),bins);
+%h2.FaceColor = [0.9 0 0];
 hold off;

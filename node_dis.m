@@ -13,7 +13,7 @@ for i=0:1
     end
 end
 
-N = 30; %    number of boxes per side of the cube
+N = 10; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 k_value = 15;           % number of nearest neighbors used in the knnsearch
 repel_steps = 1;        % number of iterations of the repulsion procedure
@@ -54,11 +54,11 @@ for i=1:N^dim
     nodes(i,:,:) = node;
 end
 
-
+toc
 
 % nodes_sparse = reshape(nodes(:,2:end,:),3,[]);       % this contains
 % all the sparsity; we will turn nodes into a full matrix instead
-
+tic
 num_nodes = sum(nodes(:,1,1));
 
 cnf = zeros(num_nodes,dim);
