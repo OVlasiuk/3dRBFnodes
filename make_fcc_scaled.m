@@ -3,7 +3,6 @@ function [M] = make_fcc_scaled(A,B,r,s,C,D)
 %A,B row vectors. Density scales linearly from separation radius r at vertex
 %C to radius s*r at vertex D.
 %Output is Nx3 array of coordinates.
-tic
 %Rescale r
 r = (1+s)/2*r;
 len = abs(B(1)-A(1));
@@ -39,5 +38,4 @@ M(N,:) = len-M(N,:);
 M = M+bsxfun(@min,A,B)'*ones(1,sizeM);
 M = M';
 
-toc
 end
