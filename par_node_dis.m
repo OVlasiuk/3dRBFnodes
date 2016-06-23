@@ -1,6 +1,6 @@
 dim = 3;
 oct = 2^dim;
-N = 30; %    number of boxes per side of the cube
+N = 50; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 % 
 % vertices of the unit cube
@@ -70,7 +70,9 @@ end
 
 pbaspect([1 1 1])
 figure(1);
-fprintf( 'Number of nodes:      %d\n\n',  num_nodes )
+fprintf( '\nNumber of nodes:      %d\n',  num_nodes )
+fprintf( 'Mean number of nodes per box:      %d\n', mean(nodes(:,1,1) ))
+fprintf( 'Max number of nodes per box:      %d\n\n', max(nodes(:,1,1) ))
 plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
 
 
