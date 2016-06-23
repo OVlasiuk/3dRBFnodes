@@ -1,4 +1,5 @@
 function r=slanttrui(xyz)
+<<<<<<< Updated upstream
 
 <<<<<<< HEAD
 n = normr([1,1,1]);
