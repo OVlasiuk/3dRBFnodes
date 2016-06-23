@@ -1,6 +1,6 @@
 dim = 3;
 oct = 2^dim;
-N = 50; %    number of boxes per side of the cube
+N = 30; %    number of boxes per side of the cube
 max_nodes_per_box = 20; 
 % 
 % vertices of the unit cube
@@ -23,11 +23,11 @@ nodes = zeros(N^dim, max_nodes_per_box+1,dim); % the vector (n,1,:) will contain
 tic
 parfor i=1:N^dim
     corners(i,:) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];   % TODO
-    corner = corners(i,:);
-    eval_pts = num2cell(bsxfun(@plus, corner(1:2), cube_vectors(:,1:2)/N),2);
-%     eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
+%     corner = corners(i,:);
+%     eval_pts = num2cell(bsxfun(@plus, corner(1:2), cube_vectors(:,1:2)/N),2);
+    eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/N),2);
 %     fun_values = cellfun(@density, eval_pts);
-    fun_values = cellfun(@trui, eval_pts);
+    fun_values = cellfun(@slanttrui, eval_pts);
 % % % % % % % %            
 % % % %     fcc-lattice 
 %     [max_dens, ind1] = max(fun_values);
@@ -41,7 +41,12 @@ parfor i=1:N^dim
 %         end    
 % % % % % % % %      
 % % % % %   irrational nodes       
-    current_num_nodes = max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values));
+    current_num_nodes = floor(max_nodes_per_box*(1 -  mean(fun_values)));
+    for j=1:current_num_nodes
+        
+    end
+    
+    
     current_box = make_irrational_nodes(corners(i,:), corners(i,:)+1/N, current_num_nodes);   
 % % % % % % % 
     node = zeros(max_nodes_per_box+1,dim);
@@ -69,10 +74,12 @@ end
 % % % % % % % % % % % % % 
 
 pbaspect([1 1 1])
+view([1 1 1])
 figure(1);
 fprintf( '\nNumber of nodes:      %d\n',  num_nodes )
 fprintf( 'Mean number of nodes per box:      %d\n', mean(nodes(:,1,1) ))
-fprintf( 'Max number of nodes per box:      %d\n\n', max(nodes(:,1,1) ))
+fprintf( 'Max number of nodes per box:      %d\n', max(nodes(:,1,1) ))
+fprintf( 'Min number of nodes per box:      %d\n\n', min(nodes(:,1,1) ))
 plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
 
 
@@ -83,5 +90,7 @@ cnf = repel(cnf, k_value, repel_steps);
 toc 
 
 pbaspect([1 1 1])
+view([1 1 1])
 figure(2);
 plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
+save('slanttrui.mat', 'cnf')
