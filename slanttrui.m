@@ -1,11 +1,8 @@
 function r=slanttrui(xyz)
 
-<<<<<<< HEAD
 n = normr([1,1,1]);
 proj = (xyz-dot(xyz,n)*n)';
-=======
-n = normr([1 1 0]);
->>>>>>> origin/HEAD
+
 S = null(n);
 proj = (xyz-dot(xyz,n)*n)';
 proj = proj.*[sqrt(2); sqrt(2);1];
