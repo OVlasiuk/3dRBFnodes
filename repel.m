@@ -14,13 +14,13 @@ figure(3);
 hold on;
 
 for iter=1:repel_steps
-   % parfor i=1:size(cnf,1)
-        %force_i = normr(ones(k_value,1) * cnf(i,:) - cnf(IDX(i,2:end),:));
-%         
-       % factor = 1/(iter*(LARGE_NUMBER + density(cnf(i,:))));
-%         
-      %  forces(i, :) = factor * sum(force_i, 1);
-   % end
+   for i=1:size(cnf,1)
+        force_i = normr(ones(k_value,1) * cnf(i,:) - cnf(IDX(i,2:end),:));
+         
+        factor = 1/(iter*(LARGE_NUMBER + density(cnf(i,:))));
+         
+        forces(i, :) = factor * sum(force_i, 1);
+    end
     cnf = cnf + forces;
     cnf(cnf<0) =  -cnf(cnf<0);
     cnf(cnf>1) =  2-cnf(cnf>1);

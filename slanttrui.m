@@ -1,6 +1,5 @@
 function r=slanttrui(xyz)
 
-<<<<<<< HEAD
 n = normr([1,1,1]);
 proj = (xyz-dot(xyz,n)*n)';
 S = null(n);
