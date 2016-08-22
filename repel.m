@@ -1,15 +1,15 @@
 function cnf = repel(cnf, k_value, repel_steps)
 
 bins = 50;
-LARGE_NUMBER = 8000;            % we will divide by it; really arbitrary
+% LARGE_NUMBER = 8000;            % we will divide by it; really arbitrary
 
 [IDX, D] = knnsearch(cnf, cnf, 'k', k_value+1);
 forces = zeros(size(cnf));        
 
 step = min(D(:,2));
 % max_step = max(D(:,2));
-fprintf( 'Minimal separation before repulsion:      %f\n', step  )
-fprintf( 'Mean separation before repulsion:      %f\n\n',  mean(D(:,2)) )
+fprintf( 'Minimal separation before repel steps:      %f\n', step  )
+fprintf( 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
 figure(2);
