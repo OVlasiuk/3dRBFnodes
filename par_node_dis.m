@@ -4,8 +4,8 @@
                                                                                        % TODO column-major adjustment
 dim = 3;
 oct = 2^dim;
-N = 2;                                                                                % number of boxes per side of the cube
-max_nodes_per_box = 10;  
+N = 50;                                                                                % number of boxes per side of the cube
+max_nodes_per_box = 15;  
 k_value = 15;                                                                          % number of nearest neighbors used in the knnsearch
 repel_steps = 0;
 r1 = sqrt(2);
@@ -30,22 +30,20 @@ corners = -ones(dim,N^dim);
 
                                                 
 tic
-for i=1:N^dim
+parfor i=1:N^dim
     corners(:,i) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];      % TODO: this is not dimension-independent
                                                                                         %       also, it is quite nasty
                                                                                         %       
     eval_pts = num2cell(bsxfun(@plus, corners(:,i), cube_vectors/N),1);
     fun_values = cellfun(density, eval_pts);               
     current_num_nodes = min(max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values)), max_nodes_per_box);    
-    box = zeros(dim, max_nodes_per_box);
-    
+    box = zeros(dim, max_nodes_per_box);    
     for j=1:current_num_nodes
         box(:,j) = [j/current_num_nodes/N;  frac_part(r1*j)/N;  frac_part(r2*j)/N];     % TODO: can this be vectorized?
         box(:,j) = box(:,j) + corners(:,i);
     end    
-    nodes(:,:,i) = box;
-    
-    if min(fun_values)<=0                                                               % this definitely can be vectorized easily
+    nodes(:,:,i) = box;   
+    if max(fun_values)>=.7                                                               % this definitely can be vectorized easily
         box_indices(i) = true;        
     end
     temp = false(max_nodes_per_box,1);
@@ -58,40 +56,31 @@ toc
 bdry_nodes = nodes(:, :, box_indices);                                                  % coordinates of the nodes that belong to boundary boxes
 flat = num2cell(reshape(bdry_nodes, dim, []), 1);                                       % 
 f_vals = cellfun(density, flat);                                                        % values of the density function at those nodes
-bdry_removed_indices = reshape( f_vals <=0, max_nodes_per_box, []);                     % indices of nodes that have to be removed
+bdry_removed_indices = reshape( f_vals >.7, max_nodes_per_box, []);                     % indices of nodes that have to be removed
 node_indices(:, box_indices) = node_indices(:, box_indices) .* ~bdry_removed_indices;   % indices in the global nodeset
-node_indices = reshape(node_indices, 1, []);  
+node_indices_flat = reshape(node_indices, 1, []);  
 nodes = reshape (nodes, dim, []);
-cnf = nodes(:, node_indices);                                                           % after removing all nodes with zero density
-                                                                                        
-% cnf = zeros(num_nodes,dim);
-% count = 1;
-% for i=1:N^dim
-%     cur_num = nodes(i,1,1);
-%     cnf(count:(count+cur_num-1),:) = nodes(i, 2:cur_num+1, :);
-%     count = count + cur_num;
-% end
-% 
-% 
+cnf = nodes(:, node_indices_flat);                                                           % after removing all nodes with zero density
+                             
 % % % % % % % % % % % % % % 
-% fprintf( '\nNumber of nodes:      %d\n',  num_nodes )
-% fprintf( 'Mean number of nodes per box:      %d\n', mean(nodes(:,1,1) ))
-% fprintf( 'Max number of nodes per box:      %d\n', max(nodes(:,1,1) ))
-% fprintf( 'Min number of nodes per box:      %d\n', min(nodes(:,1,1) ))
-% toc
-% fprintf('\n');
-% 
-% % pbaspect([1 1 1])
-% % view([1 1 0])
-% % figure(2);
-% % plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
-% 
-% fprintf( 'Performing %d repel steps.\n',  repel_steps)
-% cnf = repel(cnf, k_value, repel_steps);
-% toc 
-% 
+fprintf( '\nNumber of nodes:      %d\n',  length(cnf))
+fprintf( 'Mean number of nodes per box:      %d\n', mean(sum(node_indices,1) ))
+fprintf( 'Max number of nodes per box:      %d\n', max(sum(node_indices,1) ))
+fprintf( 'Min number of nodes per box:      %d\n', min(sum(node_indices,1) ))
+toc
+fprintf('\n');
+
 % pbaspect([1 1 1])
-% % view([1 1 0])
-% figure(1);
-% plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
-% save('slanttrui.mat', 'cnf')
+% view([1 1 0])
+% figure(2);
+% plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+
+fprintf( 'Performing %d repel steps.\n',  repel_steps)
+cnf = repel(cnf', k_value, repel_steps);
+toc 
+
+pbaspect([1 1 1])
+% view([1 1 0])
+figure(1);
+plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
+save('slanttrui.mat', 'cnf')
