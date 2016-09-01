@@ -11,7 +11,7 @@ if isempty(F)
     
 end
 ixy = round(255*xy);
-r = ( F(1+ ixy(:,2)+ 256*ixy(:,1) ) ); 
+r = ( F(1+ ixy(2,:)+ 256*ixy(1,:) ) )  ; 
 
 % Given a location (x,y), evaluate
 % the corresponding grain radius

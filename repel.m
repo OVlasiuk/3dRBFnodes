@@ -13,8 +13,8 @@ fprintf( 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
 figure(2);
-%h1=histogram(D(:,2),bins);
-%h1.FaceColor = [0 0 0.9];
+h1=histogram(D(:,2),bins);
+h1.FaceColor = [0 0 0.9];
 hold on;
 % % % % % % % % % % % % % % % % % % % % 
 for iter=1:repel_steps
@@ -35,6 +35,6 @@ fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
 figure(2);
-%h2 = histogram(D(:,2),bins);
-%h2.FaceColor = [0.9 0 0];
+h2 = histogram(D(:,2),bins);
+h2.FaceColor = [0.9 0 0];
 hold off;
