@@ -1,5 +1,5 @@
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: PARALLEL CPUS % % % % % % %
-% % % % % % % % % % % % % PARAMETERS% % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
                                                                                        % TODO replace index counts and such with masks
                                                                                        % TODO column-major adjustment
 dim = 3;
@@ -7,10 +7,12 @@ oct = 2^dim;
 N = 50;                                                                                % number of boxes per side of the cube
 max_nodes_per_box = 15;  
 k_value = 15;                                                                          % number of nearest neighbors used in the knnsearch
-repel_steps = 0;
+repel_steps = 1;
+repel_power = 5;
 r1 = sqrt(2);
 r2 = sqrt(5);
 density = @trui;
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
@@ -31,7 +33,9 @@ corners = -ones(dim,N^dim);
                                                 
 tic
 parfor i=1:N^dim
-    corners(:,i) = [rem((i-1), N)/N  floor(rem(i-1, N^2)/N)/N floor((i-1)/N^2)/N];      % TODO: this is not dimension-independent
+    corners(:,i) = [rem((i-1), N)  floor(rem(i-1, N^2)/N)  floor((i-1)/N^2)]/N;
+%    floor(rem(i-1, N^2)/N)
+    % TODO: this is not dimension-independent
                                                                                         %       also, it is quite nasty
                                                                                         %       
     eval_pts = num2cell(bsxfun(@plus, corners(:,i), cube_vectors/N),1);
@@ -39,7 +43,7 @@ parfor i=1:N^dim
     current_num_nodes = min(max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values)), max_nodes_per_box);    
     box = zeros(dim, max_nodes_per_box);    
     for j=1:current_num_nodes
-        box(:,j) = [j/current_num_nodes/N;  frac_part(r1*j)/N;  frac_part(r2*j)/N];     % TODO: can this be vectorized?
+        box(:,j) = [j/current_num_nodes;  frac_part(r1*j);  frac_part(r2*j)]/N;     % TODO: can this be vectorized?
         box(:,j) = box(:,j) + corners(:,i);
     end    
     nodes(:,:,i) = box;   
@@ -76,7 +80,7 @@ fprintf('\n');
 % plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
 
 fprintf( 'Performing %d repel steps.\n',  repel_steps)
-cnf = repel(cnf', k_value, repel_steps);
+cnf = repel(cnf', k_value, repel_steps, repel_power);
 toc 
 
 pbaspect([1 1 1])

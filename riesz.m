@@ -1,3 +1,3 @@
-function f = riesz(v)
+function f = riesz(v, power)
 
-f = norm(v)^(-5);
+f = norm(v)^(-power);
