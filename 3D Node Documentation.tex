@@ -29,6 +29,10 @@ The aim is to develop a method for distributing nodes on arbitrarily shaped doma
  \item be massively parallel.
 \end{itemize}
 
+\section{Quasi Monte-Carlo point distributions}
+
+A key element of the presented method consists in generating a point configuration using a deterministic algorithm 
+
 \section{Matlab code}
 
 The Git repository containing Matlab code is available at  \texttt{\url{https://github.com/OVlasiuk/3dRBFnodes.git}}.
@@ -74,7 +78,10 @@ Several outstanding issues remain.
 \begin{itemize}
 \item The generation of the lattice on each subcube should be improved. We are working on transforming the lattice so that the density varies linearly within each subcube. This would make the density of the initial point generation more accurate and fewer repulsion steps would be needed.
 \item The current code does not handle general boundaries beside the cube. Ideally the node distribution restricted to the boundary should be a reasonable 2D node distribution of variable density.
-\item We are working on parallelizing the repulsion steps and implementing the algorithm on a GPU.
+\item We are working on parallelizing the repulsion steps and implementing the algorithm on a GPU. \cite{Recipes1989}
 \end{itemize}
+
+\bibliography{nodes}
+\bibliographystyle{plain}
 
 \end{document}
