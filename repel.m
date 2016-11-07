@@ -23,19 +23,18 @@ h1.FaceColor = [0 0 0.9];        % blue
 hold on;
 % % % % % % % % % % % % % % % % % % % % 
 
-
-
 % G_neighbors = gpuArray( cnf(:,IDX) );
 % G_cnf = gpuArray( cnf );
 % 
 % for iter=1:repel_steps 
 %        cnf_repeated = reshape(repmat(G_cnf,k_value,1), dim, k_value*pt_num); 
 %        directions = cnf_repeated - G_neighbors;
-%        force_coeffs = cellfun(riesz_s,  num2cell(directions,1));                 %this has k_value rows  
-%        directions = bsxfun(@times,force_coeffs,directions);
+%        inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));
+%        directions = bsxfun(@times,inverse_norms_riesz,directions);
 %        directions = sum(reshape(directions, dim, k_value, pt_num),2);
 %        directions = reshape(directions, dim, pt_num);
-%        forces =  normc(directions);                        % this has to be reimplemented for gpu
+%        inverse_norms = sum(directions.^2,1).^(-0.5);
+%        forces =  bsxfun(@times,inverse_norms,directions); 
 %        
 %     G_cnf = G_cnf + forces*step/5/iter;
 %     G_cnf(G_cnf<0) =  -G_cnf(G_cnf<0);
@@ -49,11 +48,10 @@ for iter=1:repel_steps
        cnf_neighbors = cnf(:,IDX);
        cnf_repeated = reshape(repmat(cnf,k_value,1), dim, k_value*pt_num); 
        directions = cnf_repeated - cnf_neighbors;
-       force_coeffs = cellfun(riesz_s,  num2cell(directions,1));                 %this has k_value rows  
-       directions = bsxfun(@times,force_coeffs,directions);
+       inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));      
+       directions = bsxfun(@times,inverse_norms_riesz,directions);
        directions = sum(reshape(directions, dim, k_value, pt_num),2);
        directions = reshape(directions, dim, pt_num);
-%        forces =  normc(directions);                        % this has to be reimplemented for gpu
        inverse_norms = sum(directions.^2,1).^(-0.5);
        forces =  bsxfun(@times,inverse_norms,directions); 
        
