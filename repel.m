@@ -8,8 +8,11 @@ pt_num = size(cnf,2);
 forces = zeros(size(cnf));        
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
 
-cnf_neighbors = cnf(:,IDX);
-cnf_neighbors = reshape(cnf_neighbors, dim, k_value, pt_num);
+
+
+
+% G_neighbors = gpuArray( cnf_neighbors );
+% G_cnf = gpuArray( cnf_repeated );
 
 step = min(D(:,2));
 fprintf( 'Minimal separation before repel steps:      %f\n', step  )
@@ -22,24 +25,19 @@ h1.FaceColor = [0 0 0.9];        % blue
 hold on;
 % % % % % % % % % % % % % % % % % % % % 
 
-% cnf_full = zeros(dim, k, size(cnf,1) );
-% for i=1:size(cnf,1)
-%     cnf_full(:,:,i) = 
-% end
-
-
-
 for iter=1:repel_steps
-   parfor i=1:pt_num    
-       directions =   cnf(:,i) * ones(1,k_value) - cnf_neighbors(:,:,i);         %this has dim rows, k_value columns
+       cnf_neighbors = cnf(:,IDX);
+       cnf_repeated = reshape(repmat(cnf,k_value,1), dim, k_value*pt_num); 
+       directions = cnf_repeated - cnf_neighbors;
        force_coeffs = cellfun(riesz_s,  num2cell(directions,1));                 %this has k_value rows  
-       forces(:,i) =  normc(directions * force_coeffs' );                        % 1 x k_value * k_value x 3
-   end
+       directions = bsxfun(@times,force_coeffs,directions);
+       directions = sum(reshape(directions, dim, k_value, pt_num),2);
+       directions = reshape(directions, dim, pt_num);
+       forces =  normc(directions);                        % this has to be reimplemented for gpu
+       
     cnf = cnf + forces*step/5/iter;
     cnf(cnf<0) =  -cnf(cnf<0);
     cnf(cnf>1) =  2-cnf(cnf>1);
-    cnf_neighbors = cnf(:,IDX);
-    cnf_neighbors = reshape(cnf_neighbors, dim, k_value, pt_num);
 end
 
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   

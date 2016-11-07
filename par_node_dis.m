@@ -5,7 +5,7 @@
 
 dim = 3;
 oct = 2^dim;
-N = 40;  % number of boxes per side of the cube
+N = 20;  % number of boxes per side of the cube
 max_nodes_per_box = 15;  
 delta = 1/(2* N * max_nodes_per_box^(1/dim));
 cube_shrink = 1 - max_nodes_per_box^(1/dim-1);
