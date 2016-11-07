@@ -5,9 +5,10 @@
 
 dim = 3;
 oct = 2^dim;
-N = 20;  % number of boxes per side of the cube
-delta = 1/N;
+N = 40;  % number of boxes per side of the cube
 max_nodes_per_box = 15;  
+delta = 1/(2* N * max_nodes_per_box^(1/dim));
+cube_shrink = 1 - max_nodes_per_box^(1/dim-1);
 k_value = 15;     % number of nearest neighbors used in the knnsearch 
 repel_steps = 10;
 repel_power = 5;
@@ -23,7 +24,7 @@ cube_vectors = zeros(dim, oct);
 for i=1:dim
     len = 2 ^ (dim-i);
     for j=0:2^i-1                       
-        cube_vectors(i, j*len+1:(j+1)*len) = .9 * mod(j,2)/N;
+        cube_vectors(i, j*len+1:(j+1)*len) =  mod(j,2)/N;
     end
 end
 
@@ -38,15 +39,15 @@ corner = -ones(dim,1);
 
 %% main parfor                                                
 tic
-for i=1:N^dim
-    corner = [rem((i-1), N);  floor(rem(i-1, N^2)/N);  floor((i-1)/N^2)]/N  + delta * .05 ;              %  the corner, moved inwards by a fraction of delta   % TODO: this is not dimension-independent
+parfor i=1:N^dim
+    corner = [rem((i-1), N);  floor(rem(i-1, N^2)/N);  floor((i-1)/N^2)]/N  ;              % TODO: this is not dimension-independent
     eval_pts = num2cell(bsxfun(@plus, corner, cube_vectors),1);
     fun_values = cellfun(density, eval_pts);               
     current_num_nodes = min(max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values)), max_nodes_per_box);    
     box = zeros(dim, max_nodes_per_box);    
     for j=1:current_num_nodes
-        box(:,j) = .9 * [j/current_num_nodes;  frac_part(r1*j);  frac_part(r2*j)]/N;     % the box is shrunk to account for inwards corner % TODO: can this be vectorized?
-        box(:,j) = box(:,j) + corner;
+        box(:,j) = cube_shrink * [j/current_num_nodes;  frac_part(r1*j);  frac_part(r2*j)]/N;     % the box is shrunk to account for inwards corner % TODO: can this be vectorized?
+        box(:,j) = box(:,j) + corner + delta;
     end    
     nodes(:,:,i) = box;   
     if max(fun_values)>=threshold                                                        % TODO: hard-coded condition
@@ -77,12 +78,13 @@ fprintf( 'Max number of nodes per box:      %d\n', max(sum(node_indices,1) ))
 fprintf( 'Min number of nodes per box:      %d\n', min(sum(node_indices,1) ))
 toc
 fprintf('\n');
-
+clf;
+clf;
 % pbaspect([1 1 1])
 % view([1 1 0])
 % figure(2);
 % plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
-
+ 
 %% repel and save nodes
 fprintf( 'Performing %d repel steps.\n',  repel_steps)
 cnf = repel(cnf, k_value, repel_steps, repel_power);
@@ -90,6 +92,7 @@ toc
 
 pbaspect([1 1 1])
 % view([1 1 0])
-figure(1);
+F = figure(1);
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+savefig(F,'nodes','compact')
 % save('slanttrui.mat', 'cnf')

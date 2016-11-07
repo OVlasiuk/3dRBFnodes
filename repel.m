@@ -35,7 +35,7 @@ for iter=1:repel_steps
        force_coeffs = cellfun(riesz_s,  num2cell(directions,1));                 %this has k_value rows  
        forces(:,i) =  normc(directions * force_coeffs' );                        % 1 x k_value * k_value x 3
    end
-    cnf = cnf + forces*step/3/iter;
+    cnf = cnf + forces*step/5/iter;
     cnf(cnf<0) =  -cnf(cnf<0);
     cnf(cnf>1) =  2-cnf(cnf>1);
     cnf_neighbors = cnf(:,IDX);
@@ -51,4 +51,5 @@ fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
 figure(2);
 h2 = histogram(D(:,2),bins);
 h2.FaceColor = [0.9 0 0];       % red
+saveas(h2,'histogram.png');
 hold off;
