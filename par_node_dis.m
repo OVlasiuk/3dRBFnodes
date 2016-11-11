@@ -46,7 +46,7 @@ parfor i=1:N^dim
     current_num_nodes = min(max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values)), max_nodes_per_box);    
     box = zeros(dim, max_nodes_per_box);    
     for j=1:current_num_nodes
-        box(:,j) = cube_shrink * [j/current_num_nodes;  frac_part(r1*j);  frac_part(r2*j)]/N;     % the box is shrunk to account for inwards corner % TODO: can this be vectorized?
+        box(:,j) = cube_shrink * [j/current_num_nodes;  mod(r1*j,1);  mod(r2*j,1)]/N;     % the box is shrunk to account for inwards corner % TODO: can this be vectorized?
         box(:,j) = box(:,j) + corner + delta;
     end    
     nodes(:,:,i) = box;   
@@ -68,8 +68,8 @@ f_vals = cellfun(density, flat);                                                
 bdry_removed_indices = reshape( f_vals > threshold, max_nodes_per_box, []);             % indices of nodes that have to be removed; hard-coded threshold condition
 node_indices(:, box_indices) = node_indices(:, box_indices) .* ~bdry_removed_indices;   % indices in the global nodeset
 node_indices_flat = reshape(node_indices, 1, []);  
-nodes = reshape (nodes, dim, []);
-cnf = nodes(:, node_indices_flat);                                                           % after removing all nodes with zero density
+nodes = reshape (nodes, dim, []);                                                       % all nodes in a single array;      dim x num possible nodes
+cnf = nodes(:, node_indices_flat);                                                      % after removing nodes with zero density
                              
 %% node stats
 fprintf( '\nNumber of nodes:      %d\n',  length(cnf))

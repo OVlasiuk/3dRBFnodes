@@ -10,7 +10,7 @@ forces = zeros(size(cnf));
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
 
 step = min(D(:,2));
-fprintf( 'Minimal separation before repel steps:      %f\n', step  )
+fprintf( 'Minimal separation before repel steps:      %f\n', step)
 fprintf( 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
