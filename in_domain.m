@@ -1,4 +1,4 @@
-function is = in_domain_gpu(x, y, z)
+function is = in_domain(x, y, z)
 
 % G_neighbors = gpuArray( cnf(:,IDX) );
 % G_cnf = gpuArray( cnf );
