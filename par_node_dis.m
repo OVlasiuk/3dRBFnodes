@@ -18,7 +18,9 @@ cube_shrink = 1 - max_nodes_per_box^(1/dim-1);
 r1 = sqrt(2);
 r2 = sqrt(5);
 threshold = .7;   % domain choice threshold (used for strictly positive density)
-
+if ~exist('Output')
+    mkdir Output;
+end
 %% populate vertices of the unit cube 
 cube_vectors = zeros(dim, oct);                                                                
 for i=1:dim
@@ -94,6 +96,7 @@ pbaspect([1 1 1])
 % view([1 1 0])
 F = figure(1);
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+
 savefig(F,'./Output/nodes','compact')
 % save('slanttrui.mat', 'cnf')
 dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3
