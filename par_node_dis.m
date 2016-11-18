@@ -6,7 +6,7 @@
 
 N = 20;                         % number of boxes per side of the cube
 max_nodes_per_box = 15;  
-repel_steps = 10;
+repel_steps = 10;               % the number of iterations of the repel.m routine
 density = @trui;                % put the handle to your density function here
 k_value = 15;                   % number of nearest neighbors used in the repel.m
 %%
