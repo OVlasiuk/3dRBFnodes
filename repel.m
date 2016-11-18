@@ -26,7 +26,7 @@ hold on;
 % G_neighbors = gpuArray( cnf(:,IDX) );
 % G_cnf = gpuArray( cnf );
 % 
-% for iter=1:repel_steps 
+% for iter=1:repel_steps
 %        cnf_repeated = reshape(repmat(G_cnf,k_value,1), dim, k_value*pt_num); 
 %        directions = cnf_repeated - G_neighbors;
 %        inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));
@@ -70,5 +70,5 @@ fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
 figure(2);
 h2 = histogram(D(:,2),bins);
 h2.FaceColor = [0.9 0 0];       % red
-saveas(h2,'histogram.png');
+saveas(h2,'./Output/histogram.png');
 hold off;

@@ -94,5 +94,6 @@ pbaspect([1 1 1])
 % view([1 1 0])
 F = figure(1);
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
-savefig(F,'nodes','compact')
+savefig(F,'./Output/nodes','compact')
 % save('slanttrui.mat', 'cnf')
+dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3
