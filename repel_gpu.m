@@ -23,22 +23,26 @@ h1.FaceColor = [0 0 0.9];        % blue
 hold on;
 % % % % % % % % % % % % % % % % % % % % 
 
+G_neighbors = gpuArray( cnf(:,IDX) );
+G_cnf = gpuArray( cnf );
 
-for iter=1:repel_steps
-       cnf_neighbors = cnf(:,IDX);
-       cnf_repeated = reshape(repmat(cnf,k_value,1), dim, k_value*pt_num); 
-       directions = cnf_repeated - cnf_neighbors;
-       inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));      
+for iter=1:repel_steps 
+       cnf_repeated = reshape(repmat(G_cnf,k_value,1), dim, k_value*pt_num); 
+       directions = cnf_repeated - G_neighbors;
+       inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));
        directions = bsxfun(@times,inverse_norms_riesz,directions);
        directions = sum(reshape(directions, dim, k_value, pt_num),2);
        directions = reshape(directions, dim, pt_num);
        inverse_norms = sum(directions.^2,1).^(-0.5);
        forces =  bsxfun(@times,inverse_norms,directions); 
        
-    cnf = cnf + forces*step/5/iter;
-    cnf(cnf<0) =  -cnf(cnf<0);
-    cnf(cnf>1) =  2-cnf(cnf>1);
+    G_cnf = G_cnf + forces*step/5/iter;
+    G_cnf(G_cnf<0) =  -G_cnf(G_cnf<0);
+    G_cnf(G_cnf>1) =  2-G_cnf(G_cnf>1);
+    G_neighbors = G_cnf(:,IDX);
 end
+
+cnf = gather(G_cnf);
 
 
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   

@@ -1,25 +1,25 @@
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: PARALLEL CPUS % % % % % % %
 
+% TODO: dimension-agnostic code
+% TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-% TODO use even more masks          
 
-dim = 3;
-oct = 2^dim;
-N = 20;  % number of boxes per side of the cube
+N = 20;                         % number of boxes per side of the cube
 max_nodes_per_box = 15;  
+repel_steps = 10;
+density = @trui;                % put the handle to your density function here
+k_value = 15;                   % number of nearest neighbors used in the repel.m
+%%
+dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
+repel_power = 5;
+oct = 2^dim;
 delta = 1/(2* N * max_nodes_per_box^(1/dim));
 cube_shrink = 1 - max_nodes_per_box^(1/dim-1);
-k_value = 15;     % number of nearest neighbors used in the knnsearch 
-repel_steps = 10;
-repel_power = 5;
 r1 = sqrt(2);
 r2 = sqrt(5);
-density = @trui;
 threshold = .7;   % domain choice threshold (used for strictly positive density)
 
 %% populate vertices of the unit cube 
-
-
 cube_vectors = zeros(dim, oct);                                                                
 for i=1:dim
     len = 2 ^ (dim-i);
