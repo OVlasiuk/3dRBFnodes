@@ -1,6 +1,6 @@
 function cnf = repel(cnf, k_value, repel_steps,s)
 
-bins = 50;
+bins = 100;
 riesz_s = @(x)riesz(x,s+1);
 dim = size(cnf,1);
 pt_num = size(cnf,2);
@@ -34,10 +34,14 @@ for iter=1:repel_steps
        directions = reshape(directions, dim, pt_num);
        inverse_norms = sum(directions.^2,1).^(-0.5);
        forces =  bsxfun(@times,inverse_norms,directions); 
+    
+    cnf_tentative = cnf + forces*step/5/iter;
+    domain_check = in_domain( cnf(1,:), cnf(2,:), cnf(3,:) );
        
-    cnf = cnf + forces*step/5/iter;
-    cnf(cnf<0) =  -cnf(cnf<0);
-    cnf(cnf>1) =  2-cnf(cnf>1);
+    cnf = cnf + bsxfun(@times,domain_check,forces)*step/5/iter;
+    
+%     cnf(cnf<0) =  -cnf(cnf<0);
+%     cnf(cnf>1) =  2-cnf(cnf>1);
 end
 
 

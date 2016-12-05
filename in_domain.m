@@ -1,4 +1,8 @@
 function is = in_domain(x, y, z)
+% Check if the point (x,y,z) lies in the atmosphere-like layer; uses ETOPO1
+% data and linear interpolation to compare the norm of (x,y,z) with that of
+% the Earth surface at the same values of spherical angles.
+
 
 % G_neighbors = gpuArray( cnf(:,IDX) );
 % G_cnf = gpuArray( cnf );
@@ -24,6 +28,8 @@ persistent Z;
 if isempty(Z)
     load('z_transp.mat');    
 end
+outer = 1.1;
+inner = .9;
 
 % persistent Z_gpu = gpuArray( Z );
 % x_gpu = gpuArray( x );
@@ -36,6 +42,7 @@ end
 
 
 [m, n] = size(Z);
+nn = numel(Z);
 delta = pi/n;
 [p1, p2, p3] = cart2sph(x_gpu,y_gpu,z_gpu);
 
@@ -46,21 +53,29 @@ gridaz = uint16( (p1-azdelta)/delta + m/2 );
 gridel = uint16( (p2-eldelta)/delta + n/2 );
 gridind = sub2ind(size(Z), gridaz, gridel);
 
-R = 1+[Z(gridind) Z(gridind+m) Z(gridind+1) Z(gridind+m+1)]/6378000;
+% Instead of dividing by the Earth radius in meters, i.e. 6,378,000, we exaggerate the
+% radial coordinate.
+R = 0.9+[Z(gridind) Z(mod(gridind+m,nn)) Z(mod(gridind+1,nn)) Z(mod(gridind+m+1,nn))]/63780;
 
 
 indices =  (azdelta + eldelta) <= delta;
 
-    r_interpolated = R(indices,1) + ( R(indices,2)-R(indices,1) ) .*...
+    r_interpolated_lower = R(indices,1) + ( R(indices,2)-R(indices,1) ) .*...
         eldelta(indices,1)/delta +...
         ( R(indices,2)-R(indices,1) ) .* azdelta(indices,1)/delta;
 % else 
-    r_not_interpolated = R(~indices,4) + (R(~indices,2)-R(~indices,4)).*...
+    r_interpolated_upper = R(~indices,4) + (R(~indices,2)-R(~indices,4)).*...
         (1-azdelta(~indices,1)/delta) +...
         (R(~indices,3)-R(~indices,4)).*(1-eldelta(~indices,1)/delta);
 % end
 % is = zeros(numel(x_gpu),'gpuArray');
 is =zeros(1,numel(x));
 
-is(indices) =  (p3(indices,1) < 1.1) .* (r_interpolated < p3(indices,1));
-is(~indices) =  (p3(~indices,1) < 1.1) .* (r_not_interpolated < p3(~indices,1));
+% for the "atmosphere"-type layer:
+% is(indices) =  (p3(indices,1) < outer) .* (r_interpolated_lower < p3(indices,1));
+% is(~indices) =  (p3(~indices,1) < outer) .* (r_interpolated_upper < p3(~indices,1));
+
+% for the "crust"-type layer:
+is(indices) =  (p3(indices,1) > inner) .* (r_interpolated_lower > p3(indices,1));
+is(~indices) =  (p3(~indices,1) > inner) .* (r_interpolated_upper > p3(~indices,1));
+
