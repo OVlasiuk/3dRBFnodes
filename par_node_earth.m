@@ -4,14 +4,14 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 100;                         % number of boxes per side of the cube
-max_nodes_per_box = 30;  
+N = 20;                         % number of boxes per side of the cube
+max_nodes_per_box = 15;  
 repel_steps = 10;               % the number of iterations of the repel.m routine
 density = @trui;                % put the handle to your density function here
-k_value = 20;                   % number of nearest neighbors used in the repel.m
+k_value = 40;                   % number of nearest neighbors used in the repel.m
 %%
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
-repel_power = 5;
+repel_power = 7;
 oct = 2^dim;
 delta = 1/(8* N * max_nodes_per_box^(1/dim));
 cube_shrink = 1 - max_nodes_per_box^(-1/dim)/2;
@@ -42,10 +42,11 @@ corner = -ones(dim,1);
 
 %% main parfor                                                
 tic
+
 parfor i=1:N^dim
     corner = [rem((i-1), N);  floor(rem(i-1, N^2)/N);  floor((i-1)/N^2)]/N  ;               % TODO: this is not dimension-independent
     l = bsxfun(@plus, corner, cube_vectors);
-    box_indices(i) = int8( (8-sum(in_domain(l(1,:), l(2,:), l(3,:))))/8 );                  % 
+    box_indices(i) =  (oct-sum(in_domain(l(1,:), l(2,:), l(3,:))) )  ;                 % 
     box = zeros(dim, max_nodes_per_box);    
     for j=1:max_nodes_per_box
         box(:,j) = cube_shrink * [j/max_nodes_per_box;  mod(r1*j,1);  mod(r2*j,1)]/N;       % the box is shrunk to account for inwards corner % TODO: can this be vectorized?
@@ -73,11 +74,15 @@ fprintf( fileID, '\nNumber of nodes:      %d\n',  outtemp);
 fprintf( '\nNumber of nodes:      %d\n',  outtemp)
 outtemp = mean(sum(node_indices,1) );
 fprintf( fileID, 'Mean number of nodes per box:      %d\n',  outtemp);
-
-fprintf( fileID, 'Max number of nodes per box:      %d\n', max(sum(node_indices,1) ))
-fprintf( fileID, 'Min number of nodes per box:      %d\n', min(sum(node_indices,1) ))
+fprintf( 'Mean number of nodes per box:      %d\n',  outtemp )
+outtemp = max(sum(node_indices,1) );
+fprintf( fileID, 'Max number of nodes per box:      %d\n', outtemp );
+fprintf( 'Max number of nodes per box:      %d\n', outtemp )
+outtemp = min(sum(node_indices,1) );
+fprintf( fileID, 'Min number of nodes per box:      %d\n', outtemp );
+fprintf( 'Min number of nodes per box:      %d\n', outtemp )
 toc
-fprintf('\n');
+fprintf('\n')
 clf;
 clf;
 % pbaspect([1 1 1])
@@ -86,7 +91,8 @@ clf;
 % plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
  
 %% repel and save nodes
-fprintf( fileID, 'Performing %d repel steps.\n',  repel_steps)
+fprintf( fileID, 'Performing %d repel steps.\n',  repel_steps);
+fprintf( 'Performing %d repel steps.\n',  repel_steps)
 cnf = repel(cnf, k_value, repel_steps, repel_power, fileID);
 toc 
 

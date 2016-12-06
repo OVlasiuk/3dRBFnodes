@@ -11,11 +11,14 @@ forces = zeros(size(cnf));
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
 
 step = min(D(:,2));
-fprintf( outfile, 'Minimal separation before repel steps:      %f\n', step)
-fprintf( outfile, 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
+fprintf( outfile, 'Minimal separation before repel steps:      %f\n', step);
+fprintf( 'Minimal separation before repel steps:      %f\n', step)
+outtemp = mean(D(:,2));
+fprintf( outfile, 'Mean separation before repel steps:      %f\n\n',   outtemp);
+fprintf(   'Mean separation before repel steps:      %f\n\n',   outtemp)
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
-fprintf('\n');
+fprintf('\n')
 clf;
 clf;
 figure(2);
@@ -47,8 +50,12 @@ end
 
 
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   
-fprintf( outfile, 'Minimal separation after:      %f\n',  min(D(:,2)) )
-fprintf( outfile, 'Mean separation after:      %f\n',  mean(D(:,2)) )
+outtemp = min(D(:,2));
+fprintf( outfile, 'Minimal separation after:      %f\n',  outtemp );
+fprintf(   'Minimal separation after:      %f\n',  outtemp );
+outtemp =  mean(D(:,2));
+fprintf( outfile, 'Mean separation after:      %f\n',  outtemp);
+fprintf( 'Mean separation after:      %f\n',  outtemp)
 
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
