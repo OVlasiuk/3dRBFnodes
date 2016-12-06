@@ -1,7 +1,8 @@
-function cnf = repel(cnf, k_value, repel_steps,s)
+function cnf = repel(cnf, k_value, repel_steps,s, outfile)
 
 bins = 100;
-riesz_s = @(x)riesz(x,s+1);
+offset = 7;         % divides the minimal separation in the main loop
+% riesz_s = @(x)riesz(x,s+1);
 dim = size(cnf,1);
 pt_num = size(cnf,2);
 forces = zeros(size(cnf));        
@@ -10,8 +11,8 @@ forces = zeros(size(cnf));
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
 
 step = min(D(:,2));
-fprintf( 'Minimal separation before repel steps:      %f\n', step)
-fprintf( 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
+fprintf( outfile, 'Minimal separation before repel steps:      %f\n', step)
+fprintf( outfile, 'Mean separation before repel steps:      %f\n\n',  mean(D(:,2)) )
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
 fprintf('\n');
@@ -35,8 +36,8 @@ for iter=1:repel_steps
        inverse_norms = sum(directions.^2,1).^(-0.5);
        forces =  bsxfun(@times,inverse_norms,directions); 
     
-    cnf_tentative = cnf + forces*step/5/iter;
-    domain_check = in_domain( cnf(1,:), cnf(2,:), cnf(3,:) );
+    cnf_tentative = cnf + forces*step/offset/iter;
+    domain_check = in_domain( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:) );
        
     cnf = cnf + bsxfun(@times,domain_check,forces)*step/5/iter;
     
@@ -46,8 +47,8 @@ end
 
 
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   
-fprintf( 'Minimal separation after:      %f\n',  min(D(:,2)) )
-fprintf( 'Mean separation after:      %f\n',  mean(D(:,2)) )
+fprintf( outfile, 'Minimal separation after:      %f\n',  min(D(:,2)) )
+fprintf( outfile, 'Mean separation after:      %f\n',  mean(D(:,2)) )
 
 % % % % % % % % % % % % % % % % % % % % 
 % % %  histogram
