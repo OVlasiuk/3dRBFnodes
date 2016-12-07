@@ -1,6 +1,6 @@
 # Boxed lattices for RBF computations
 **3dRBFnodes**
-![alt tag](http://url/to/img.png)
+![alt tag](https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/nodes.png)
 
 This is a Matlab code for placing scaled rational nodes in the unit cube with
 variable density. The principal application for such nodes are the RBF-based PDE
