@@ -79,8 +79,8 @@ This algorithm generates (depending on the computational cost of the density fun
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\linewidth]{europe1.png}
-	\caption{Middle East and Europe, represented by 201 694 nodes after 10 repelling iterations; K=20. Altitudes are exaggerated by a factor of 100.}
+	\includegraphics[width=\linewidth]{europe.png}
+	\caption{Middle East and Europe, represented by 1 138 095 nodes after 20 repelling iterations; K=20. Altitudes are exaggerated by a factor of 100. The total running time was 238.292 seconds.}
 	\label{europe}
 \end{figure}
 
@@ -88,16 +88,16 @@ This algorithm generates (depending on the computational cost of the density fun
 
 \begin{figure}[h!]
 	\centering
-	\begin{subfigure}{.45\linewidth}
-	\includegraphics[width=\linewidth]{histogram.png}
+	\begin{subfigure}{\linewidth}
+	\includegraphics[width=\linewidth]{histogram_europe.png}
 		%        \caption{cc}
 	\end{subfigure}
-	\hskip2em
-	\begin{subfigure}{.45\linewidth}
+%	\hskip2em
+	\begin{subfigure}{\linewidth}
 	\includegraphics[width=\linewidth]{greece.png}
 		%        \caption{bb}
 	\end{subfigure}
-	\caption{Left,  Right, a fragment of Greece.} 
+	\caption{Above, the histogram of the nearest neighbor distribution before(blue) and after (red) the repelling procedure. Below, a fragment of Greece.} 
 	\label{fig:mult}
 \end{figure}
 
@@ -110,7 +110,7 @@ This algorithm generates (depending on the computational cost of the density fun
 \begin{itemize}
 \item The generation of the lattice on each box should be improved. We are working on transforming the lattice so that the density varies linearly within each box. This would make the density of the initial point generation more accurate and fewer repulsion steps would be needed.
 \item Ideally the node distribution restricted to the boundary should be a reasonable 2D node distribution of variable density.
-\item GPU-version of the main parfor \cite{Recipes1989}
+\item GPU-version of the ``main'' part \cite{Recipes1989}
 \end{itemize}
 
 \bibliography{nodes}

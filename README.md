@@ -11,7 +11,7 @@ A number of parameters as well as the distribution density can be set in the pre
 
 # Usage
 
-Run **par_node_dis.m**. The subfolder **./Output** contains all the output:
+Run **par_node_dis.m** or **par_node_earth.m**. The subfolder **./Output** contains all the output:
 the coordinates of the generated nodes (*cnf.txt*), an illustration (*nodes.fig*), and a histogram containing the distribution of distances to the nearest neighbor(*histogram.png*). Number of bins in the histogram is adjusted in **repel.m**.
 
 # Contributors
