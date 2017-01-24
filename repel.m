@@ -5,7 +5,7 @@ offset = 7;         % divides the minimal separation in the main loop
 % riesz_s = @(x)riesz(x,s+1);
 dim = size(cnf,1);
 pt_num = size(cnf,2);
-forces = zeros(size(cnf));        
+directions = zeros(size(cnf));        
 
 [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
@@ -32,17 +32,20 @@ for iter=1:repel_steps
        cnf_neighbors = cnf(:,IDX);
        cnf_repeated = reshape(repmat(cnf,k_value,1), dim, k_value*pt_num); 
        riesz_gradient = cnf_repeated - cnf_neighbors;
-       inverse_norms_riesz = sum(riesz_gradient.^2,1).^(-0.5*(s+1));      
+%      vectors pointing from each node to its k_value nearest neighbors
+       inverse_norms_riesz = sum(riesz_gradient.^2,1).^(-0.5*(s+1));
+%      norms of riesz_gradient raised to the power -s
        riesz_gradient = bsxfun(@times,inverse_norms_riesz,riesz_gradient);
        riesz_gradient = sum(reshape(riesz_gradient, dim, k_value, pt_num),2);
        riesz_gradient = reshape(riesz_gradient, dim, pt_num);
+%      Riesz gradient for the node configuration       
        inverse_norms = sum(riesz_gradient.^2,1).^(-0.5);
-       forces =  bsxfun(@times,inverse_norms,riesz_gradient); 
-    
-    cnf_tentative = cnf + forces*step/offset/iter;
+       directions =  bsxfun(@times,inverse_norms,riesz_gradient); 
+%      normalized Riesz gradient
+    cnf_tentative = cnf + directions*step/offset/iter;
     domain_check = in_domain( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:) );
-       
-    cnf = cnf + bsxfun(@times,domain_check,forces)*step/5/iter;
+   
+    cnf = cnf + bsxfun(@times,domain_check,directions)*step/5/iter;
     
 %     cnf(cnf<0) =  -cnf(cnf<0);
 %     cnf(cnf>1) =  2-cnf(cnf>1);
