@@ -79,17 +79,16 @@ This algorithm generates (depending on the computational cost of the density fun
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\linewidth]{europe.png}
+	\includegraphics[width=\linewidth]{europe1.png}
 	\caption{Middle East and Europe, represented by 1 138 095 nodes after 20 repelling iterations; K=20. Altitudes are exaggerated by a factor of 100. The total running time was 238.292 seconds.}
 	\label{europe}
 \end{figure}
 
 
-
 \begin{figure}[h!]
 	\centering
 	\begin{subfigure}{\linewidth}
-	\includegraphics[width=\linewidth]{histogram_europe.png}
+	\includegraphics[width=\linewidth]{Output/histogram.png}
 		%        \caption{cc}
 	\end{subfigure}
 %	\hskip2em
@@ -106,7 +105,6 @@ This algorithm generates (depending on the computational cost of the density fun
 
 
 \section{Future work}
-
 \begin{itemize}
 \item The generation of the lattice on each box should be improved. We are working on transforming the lattice so that the density varies linearly within each box. This would make the density of the initial point generation more accurate and fewer repulsion steps would be needed.
 \item Ideally the node distribution restricted to the boundary should be a reasonable 2D node distribution of variable density.

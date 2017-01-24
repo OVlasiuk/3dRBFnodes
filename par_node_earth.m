@@ -4,7 +4,7 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 200;                         % number of boxes per side of the cube
+N = 100;                         % number of boxes per side of the cube
 max_nodes_per_box = 15;          % 
 repel_steps = 20;               % the number of iterations of the repel.m routine
 density = @trui;                % put the handle to your density function here

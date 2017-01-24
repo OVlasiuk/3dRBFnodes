@@ -1,10 +1,10 @@
-function cnf = repel(cnf, k_value, repel_steps,s)
+function cnf = repel_gpu(cnf, k_value, repel_steps,s)
 
 bins = 50;
 riesz_s = @(x)riesz(x,s+1);
 dim = size(cnf,1);
 pt_num = size(cnf,2);
-forces = zeros(size(cnf));        
+directions = zeros(size(cnf));        
 
 [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
@@ -28,15 +28,19 @@ G_cnf = gpuArray( cnf );
 
 for iter=1:repel_steps 
        cnf_repeated = reshape(repmat(G_cnf,k_value,1), dim, k_value*pt_num); 
-       directions = cnf_repeated - G_neighbors;
-       inverse_norms_riesz = sum(directions.^2,1).^(-0.5*(s+1));
-       directions = bsxfun(@times,inverse_norms_riesz,directions);
-       directions = sum(reshape(directions, dim, k_value, pt_num),2);
-       directions = reshape(directions, dim, pt_num);
-       inverse_norms = sum(directions.^2,1).^(-0.5);
-       forces =  bsxfun(@times,inverse_norms,directions); 
+       riesz_gradient = cnf_repeated - G_neighbors;                      
+%      vectors pointing from each node to its k_value nearest neighbors
+       inverse_norms_riesz = sum(riesz_gradient.^2,1).^(-0.5*(s+1));
+%      norms of riesz_gradient raised to the power -s
+       riesz_gradient = bsxfun(@times,inverse_norms_riesz,riesz_gradient);
+       riesz_gradient = sum(reshape(riesz_gradient, dim, k_value, pt_num),2);
+       riesz_gradient = reshape(riesz_gradient, dim, pt_num);
+%      Riesz gradient for the node configuration       
+       inverse_norms = sum(riesz_gradient.^2,1).^(-0.5);
+       directions =  bsxfun(@times,inverse_norms,riesz_gradient);
+%      normalized Riesz gradient
        
-    G_cnf = G_cnf + forces*step/5/iter;
+    G_cnf = G_cnf + directions*step/5/iter;
     G_cnf(G_cnf<0) =  -G_cnf(G_cnf<0);
     G_cnf(G_cnf>1) =  2-G_cnf(G_cnf>1);
     G_neighbors = G_cnf(:,IDX);
