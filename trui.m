@@ -1,6 +1,6 @@
 
 function r = trui(xyz)
-xy = xyz(1:2);
+xy = xyz(2:3);
 persistent F
 % Return grain radius at location (x,y)
 if isempty(F)
@@ -11,7 +11,7 @@ if isempty(F)
     
 end
 ixy = round(255*xy);
-r = ( F(1+ ixy(:,2)+ 256*ixy(:,1) ) ); 
+r = ( F(1+ ixy(2,:)+ 256*ixy(1,:) ) )  ; 
 
 % Given a location (x,y), evaluate
 % the corresponding grain radius
