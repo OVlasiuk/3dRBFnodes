@@ -4,7 +4,7 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 100;                         % number of boxes per side of the cube
+N = 200;                         % number of boxes per side of the cube
 max_nodes_per_box = 15;          % 
 repel_steps = 20;               % the number of iterations of the repel.m routine
 density = @trui;                % put the handle to your density function here
@@ -55,8 +55,7 @@ corners_bool = in_domain(corners(1,:), corners(2,:),  corners(3,:) );
 
 [IDX, ~] = knnsearch(corners', corners', 'k', adjacency); 
 corner_indices = logical(sum(corners_bool(IDX),2));
-II = I(corner_indices);
-corners_used = [rem((II-1), N);  floor(rem(II-1, N^2)/N);  floor((II-1)/N^2)]/N;
+corners_used = corners(:,corner_indices);
 % nodes(:,:, ) = corners_used + box;
 
 count = size(corners_used,2);
@@ -98,5 +97,6 @@ F = figure(1);
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
 
 savefig(F,'./Output/nodes','compact')
+% dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3)
 % save('slanttrui.mat', 'cnf')
-dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3
+	

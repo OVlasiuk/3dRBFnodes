@@ -49,8 +49,8 @@ delta = pi/n;
 azdelta = mod(p1,delta);
 eldelta = mod(p2,delta);
 
-gridaz = uint16( (p1-azdelta)/delta + m/2 );
-gridel = uint16( (p2-eldelta)/delta + n/2 );
+gridaz = uint16( (p1-azdelta)/delta + m/2 +1);
+gridel = uint16( (p2-eldelta)/delta + n/2 +1);
 gridind = sub2ind(size(Z), gridaz, gridel);
 
 % Instead of dividing by the Earth radius in meters, i.e. 6,378,000, we exaggerate the
