@@ -1,82 +1,47 @@
-dim = 3;
-oct = 2^dim;
-Nc = 15; %    number of boxes per side of the cube
-max_nodes_per_box = 20; 
-k_value = 15;           % number of nearest neighbors used in the knnsearch
-repel_steps = 1;
-r1 = sqrt(2);
-r2 = sqrt(5);
-% 
-% vertices of the unit cube
-cube_vectors = zeros(oct,3);
-count=1;
-for i=0:1
-    for j=0:1
-        for k=0:1
-            cube_vectors(count,:) = [i j k];
-            count = count + 1;
-        end
-    end
+function [X] = surface_nodes(k)
+%Distribute n uniformily distributed Fibonacci nodes around the Earth using ETOPO1 data and linear
+%interpolation between data points.
+
+%Separation between the nodes is approximately sphere radius*3.0921*k^(-1/2)
+
+Y = getFibonacciNodes(k);
+
+persistent Z;
+if isempty(Z)
+    load('z_transp.mat');    
 end
-% % % % % % % % % % % % % % % % % % 
-corners = -ones(Nc^dim,dim);
-nodes = zeros(Nc^dim, max_nodes_per_box+1,dim); % the vector (n,1,:) will contain the number 
-                    %  of nodes in the n-th box
-                    
-tic
-parfor i=1:Nc^dim
-    corners(i,:) = [rem((i-1), Nc)/Nc  floor(rem(i-1, Nc^2)/Nc)/Nc floor((i-1)/Nc^2)/Nc];   % TODO
-    eval_pts = num2cell(bsxfun(@plus, corners(i,:), cube_vectors/Nc),2);
-    fun_values = cellfun(@trui, eval_pts);   
-%     current_num_nodes = floor(max_nodes_per_box*mean(fun_values)/2);
-    current_num_nodes = max_nodes_per_box-ceil(max_nodes_per_box * mean(fun_values));
+
+inner = .9;
+
+[m, n] = size(Z);
+nn = numel(Z);
+delta = pi/n;
+[p1, p2, p3] = cart2sph(Y(:,1),Y(:,2),Y(:,3));
+
+azdelta = mod(p1,delta);
+eldelta = mod(p2,delta);
+
+gridaz = uint16( (p1-azdelta)/delta + m/2 +1);
+gridel = uint16( (p2-eldelta)/delta + n/2 +1);
+gridind = sub2ind(size(Z), gridaz, gridel);
+
+% Instead of dividing by the Earth radius in meters, i.e. 6,378,000, we exaggerate the
+% radial coordinate.
+R = 0.9+[Z(gridind) Z(mod(gridind+m,nn)) Z(mod(gridind+1,nn)) Z(mod(gridind+m+1,nn))]/63780;
+
+
+indices =  (azdelta + eldelta) <= delta;
+
+    r_interpolated_lower = R(indices,1) + ( R(indices,2)-R(indices,1) ) .*...
+        eldelta(indices,1)/delta +...
+        ( R(indices,2)-R(indices,1) ) .* azdelta(indices,1)/delta;
     
-    node = zeros(max_nodes_per_box+1,dim);
-    corner1 = corners(i,:);
-%   corner2 = corners(i,:)+1/N;     
-    for j=1:current_num_nodes
-        node(j+1,:) = [j/current_num_nodes/Nc,  frac_part(r1*j)/Nc,  frac_part(r2*j)/Nc];
-        node(j+1,:) = node(j+1,:) + corner1;
-    end           
-    node(1,:) = node(1, :) + current_num_nodes;
-    nodes(i,:,:) = node;
+    r_interpolated_upper = R(~indices,4) + (R(~indices,2)-R(~indices,4)).*...
+        (1-azdelta(~indices,1)/delta) +...
+        (R(~indices,3)-R(~indices,4)).*(1-eldelta(~indices,1)/delta);
+
+heights(indices) =  (r_interpolated_lower > inner) .* r_interpolated_lower;
+heights(~indices) =  (r_interpolated_upper > inner) .* r_interpolated_upper;
+
+X = [heights',heights',heights'].*Y;
 end
-
-
-
-% nodes_sparse = reshape(nodes(:,2:end,:),3,[]);       % this contains
-% all the sparsity; we will turn nodes into a full matrix instead
-
-num_nodes = sum(nodes(:,1,1));
-
-cnf = zeros(num_nodes,dim);
-count = 1;
-for i=1:Nc^dim
-    cur_num = nodes(i,1,1);
-    cnf(count:(count+cur_num-1),:) = nodes(i, 2:cur_num+1, :);
-    count = count + cur_num;
-end
-
-
-% % % % % % % % % % % % % 
-fprintf( '\nNumber of nodes:      %d\n',  num_nodes )
-fprintf( 'Mean number of nodes per box:      %d\n', mean(nodes(:,1,1) ))
-fprintf( 'Max number of nodes per box:      %d\n', max(nodes(:,1,1) ))
-fprintf( 'Min number of nodes per box:      %d\n', min(nodes(:,1,1) ))
-toc
-fprintf('\n');
-
-% pbaspect([1 1 1])
-% view([1 1 0])
-% figure(2);
-% plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
-
-fprintf( 'Performing %d repelling steps.\n',  repel_steps)
-cnf = repel(cnf, k_value, repel_steps);
-toc 
-
-pbaspect([1 1 1])
-% view([1 1 0])
-figure(1);
-plot3(cnf(:,1), cnf(:,2), cnf(:,3),  '.k');
-save('slanttrui.mat', 'cnf')
