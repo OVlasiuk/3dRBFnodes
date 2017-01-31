@@ -4,7 +4,7 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 200;                         % number of boxes per side of the cube
+N = 50;                         % number of boxes per side of the cube
 max_nodes_per_box = 15;          % 
 repel_steps = 20;               % the number of iterations of the repel.m routine
 density = @trui;                % put the handle to your density function here
@@ -50,7 +50,7 @@ end
 tic
 I=1:N^dim;
 corners = [rem((I-1), N);  floor(rem(I-1, N^2)/N);  floor((I-1)/N^2)]/N;
-corners_bool = in_domain(corners(1,:), corners(2,:),  corners(3,:) );
+[corners_bool, ~] = in_domain(corners(1,:), corners(2,:),  corners(3,:) );
 % count = sum(corners_bool);
 
 [IDX, ~] = knnsearch(corners', corners', 'k', adjacency); 
@@ -68,7 +68,7 @@ nodes = reshape(repmat(corners_used,max_nodes_per_box,1),...
 
 %% remove nodes outside the density support                                                 
 flat = reshape(nodes, dim, []);                                             % coordinates of the nodes 
-f_vals = logical( in_domain(flat(1,:), flat(2,:), flat(3,:)) );             % values of the density function at those nodes
+[f_vals, ~] = in_domain(flat(1,:), flat(2,:), flat(3,:));             % values of the density function at those nodes
 cnf = flat(:, f_vals);                                                      % after removing nodes with zero density
                          
 %% node stats
@@ -94,7 +94,7 @@ toc
 pbaspect([1 1 1])
 % view([1 1 0])
 F = figure(1);
-plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k','MarkerSize',1);
 
 savefig(F,'./Output/nodes','compact')
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3)
