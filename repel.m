@@ -36,8 +36,8 @@ for iter=1:repel_steps
        cnf_repeated = reshape(repmat(cnf,k_value,1), dim, k_value*pt_num); 
        riesz_gradient = cnf_repeated - cnf_neighbors;
 %      vectors pointing from each node to its k_value nearest neighbors       
-       within_cutoff = D<cutoff;
-       norms_riesz = D.^(-(s+1)).*within_cutoff;
+%        within_cutoff = D<cutoff;
+       norms_riesz = D.^(-(s+1));%.*within_cutoff;
 %      norms of riesz_gradient raised to the power -s-1
        riesz_gradient = repmat(norms_riesz.*(norms_riesz>0),3,1).*riesz_gradient;
        riesz_gradient = sum(reshape(riesz_gradient, dim, k_value, pt_num),2);
