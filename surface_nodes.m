@@ -8,7 +8,7 @@ fib = getFibonacciNodes(k);
 
 [is, heights] = in_domain(fib(:,1),fib(:,2),fib(:,3));
 heights(~is)=1;
-X = repmat((heights)',1,3).*fib;
+X = bsxfun(@times, heights',fib);
 %  X = bsxfun(@times, heights', fib);
 % hold on;
 % pbaspect([1 1 1]);

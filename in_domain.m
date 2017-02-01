@@ -57,11 +57,11 @@ radii(indices) = r_interpolated_lower;
 radii(~indices) = r_interpolated_upper;
 
 % for the "atmosphere"-type layer:
-% is(indices) =  (p3(indices,1) < outer) .* (r_interpolated_lower < p3(indices,1));
-% is(~indices) =  (p3(~indices,1) < outer) .* (r_interpolated_upper < p3(~indices,1));
+is(indices) =  (p3(indices,1) < outer) .* (r_interpolated_lower < p3(indices,1));
+is(~indices) =  (p3(~indices,1) < outer) .* (r_interpolated_upper < p3(~indices,1));
 
 % for the "crust"-type layer:
-is(indices) =  (p3(indices,1) > inner) .* (r_interpolated_lower > p3(indices,1));
-is(~indices) =  (p3(~indices,1) > inner) .* (r_interpolated_upper > p3(~indices,1));
+% is(indices) =  (p3(indices,1) > inner) .* (r_interpolated_lower > p3(indices,1));
+% is(~indices) =  (p3(~indices,1) > inner) .* (r_interpolated_upper > p3(~indices,1));
 
 is=logical(is);
