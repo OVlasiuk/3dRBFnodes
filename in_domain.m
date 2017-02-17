@@ -25,15 +25,19 @@ z_new = reshape(z,[],1);
 
 [m, n] = size(Z);
 nn = numel(Z);
+numpt = numel(x);
 delta = pi/n;
 [p1, p2, p3] = cart2sph(x_new,y_new,z_new);
 
 azdelta = mod(p1,delta);
 eldelta = mod(p2,delta);
 
-gridaz = uint16( (p1-azdelta)/delta + m/2+1);
-gridel = uint16( (p2-eldelta)/delta + n/2);
+gridaz = uint32( (p1-azdelta)/delta + m/2);
+gridaz = max([ones(size(gridaz)) gridaz], [], 2);
+gridel = uint32( (p2-eldelta)/delta + n/2);
+gridel = max([ones(size(gridel)) gridel], [], 2);
 gridind = sub2ind(size(Z), gridaz, gridel);
+% gridind = gridaz + (gridel-1)*m;
 
 % Instead of dividing by the Earth radius in meters, i.e. 6,378,000, we exaggerate the
 % radial coordinate.
