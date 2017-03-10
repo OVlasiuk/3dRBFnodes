@@ -1,9 +1,10 @@
 function slicehist(x,y,z, a, b)
 %% slicehist(x,y,z, a, b)
 % Given a collection of points described by their coordinates x, y, z, plots 
-% the histogram of those lying in the range [a,b] in z-coordinate.
+% the frequency histogram of (x,y)-coordinates of those lying in the range [a,b] in z-coordinate.
 %%
+bins = 100;
 clf;
-indices = logical((z>a).*(z<b));
+indices = (z>a)&&(z<b);
 sum(indices)
-histogram2(x(indices),y(indices),50);
+histogram2(x(indices),y(indices),bins)
