@@ -1,4 +1,4 @@
-function cnf = repel(cnf, k_value, repel_steps, in_domain, s, density, ~)
+function cnf = repel(cnf, k_value, repel_steps, in_domain, s, density, outfile, jitter)
 % repel(cnf, k_value, repel_steps,s, outfile)
 % tries to distribute the configuration cnf of size dim x N, repelling 
 % it in the direction of the Riesz gradient by a constant multiple of the 
@@ -11,7 +11,11 @@ function cnf = repel(cnf, k_value, repel_steps, in_domain, s, density, ~)
 % s - the exponent used in the Riesz law
 % density -
 % outfile - the log is printed to this file
+if ~exist('jitter', 'var')
+    jitter = 0;
+end
 
+A = 2.4;
 dim = size(cnf,1);
 bins = 100;
 offset = 7;         % divides the minimal separation in the main loop
@@ -24,14 +28,14 @@ IDX = IDX(:,2:end)';                     % drop the trivial first column in IDX
 step = min(D(:,2));
 % cutoff = (k_value*step)^2;
 
-% % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % fprintf( outfile, 'Minimal separation before repel steps:      %f\n', step);
 fprintf( 'Minimal separation before repel steps:      %f\n', step)
 outtemp = mean(D(:,2));
 % fprintf( outfile, 'Mean separation before repel steps:      %f\n\n',   outtemp);
 fprintf(   'Mean separation before repel steps:      %f\n\n',   outtemp)
-% % % % % % % % % % % % % % % % % % % % 
-% % %  histogram
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+%% %  histogram
 
 fprintf('\n')
 clf;
@@ -42,7 +46,7 @@ h1.FaceColor = [0 0 0.9];        % blue
 hold on;
 % D_old = D;       % uncomment this line to compare distribution/invoke plot3 below 
 
-
+%% Main loop
 for iter=1:repel_steps
 %     den = density( cnf(1,:), cnf(2,:), cnf(3,:) );
 %       density evaluated at the current collection
@@ -60,27 +64,34 @@ for iter=1:repel_steps
     finite_difference2 = repmat(-eye(3), 1, size(cnf,2));
     cnf_for_gradient1 = cnf_for_gradient + step*finite_difference1;
     cnf_for_gradient2 = cnf_for_gradient + step*finite_difference2;
-    density_gradient = (density(cnf_for_gradient1(1,:), cnf_for_gradient1(2,:), cnf_for_gradient1(3,:))-...
-        density(cnf_for_gradient2(1,:), cnf_for_gradient2(2,:), cnf_for_gradient2(3,:)))/step/2.0;
+%     density_gradient = (density(cnf_for_gradient1(1,:), cnf_for_gradient1(2,:), cnf_for_gradient1(3,:))-...
+%         density(cnf_for_gradient2(1,:), cnf_for_gradient2(2,:), cnf_for_gradient2(3,:)))/step/2.0;
+    density_gradient = (density(cnf_for_gradient1)-density(cnf_for_gradient2))/step/2.0;
     density_gradient = reshape(density_gradient, dim,[]);
-    
-    
+        
     directions = bsxfun(@times,riesz_weights,knn_differences);
     directions = reshape(directions, dim, k_value, []);
-    directions = sum(directions,2);
+    directions = reshape(sum(directions,2), dim, []);
 %       sum along the dimension that contains (quasi-) k_value nearest
 %       neighbors
-    directions = reshape(directions, dim, []);% + density_gradient.*~isnan(density_gradient);
-%       Riesz gradient for this node configuration 
+    norms = sum(directions.^2,1);
+    scaling = mean(norms);
+    directions = directions + scaling*(density_gradient + jitter*rand(size(density_gradient))-0.5 );
+%     we add jitter in the last term
+%     Riesz gradient for this node configuration 
     norms = sum(directions.^2,1);
     normals = directions.*(norms.^(-0.5));
     
     cnf_tentative = cnf + normals.*step/iter/offset;
-    [domain_check, ~] = in_domain( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
-    cnf(:,domain_check) = cnf_tentative(:,domain_check); 
+%     
+%     [domain_check, ~] = in_domain( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
+%     cnf(:,domain_check) = cnf_tentative(:,domain_check); 
+    
+    domain_check = cnf_tentative>-A/2.0 & cnf< A/2.0;
+    cnf = cnf + normals.*domain_check.*step/iter/offset;
 end
  
-
+%% New separation
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   
 outtemp = min(D(:,2));
 % fprintf( outfile, 'Minimal separation after:      %f\n',  outtemp );
@@ -89,7 +100,7 @@ outtemp =  mean(D(:,2));
 % fprintf( outfile, 'Mean separation after:      %f\n',  outtemp);
 fprintf( 'Mean separation after:      %f\n',  outtemp)
 
-% % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % uncomment these lines to highlight nodes for which the distance to the
 % % nearest neighbor has decreased/increased/remained the same
 % clf;
@@ -103,9 +114,9 @@ fprintf( 'Mean separation after:      %f\n',  outtemp)
 % plot3(CG(1,:), CG(2,:), CG(3,:),  '.g','MarkerSize',1);
 % plot3(CB(1,:), CB(2,:), CB(3,:),  '.r','MarkerSize',1);
 % plot3(CE(1,:), CE(2,:), CE(3,:),  '.k','MarkerSize',1);
-% % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
-% % %  histogram
+% % % % % % % % % % % % % % % Histogram % % % % % % % % % % % % % % % % % %  
 figure(2);
 h2 = histogram(D(:,2),bins);
 h2.FaceColor = [0.9 0 0];       % red
