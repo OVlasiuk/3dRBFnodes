@@ -4,14 +4,14 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 50;                         % number of boxes per side of the cube
+N = 20;                         % number of boxes per side of the cube
 maxNodesPerBox = 40;  
 repelSteps = 30;                % the number of iterations of the repel.m routine
 densityF = @density;            %     put the handle to your density function here
 kValue = 15;                    % number of nearest neighbors used in the repel.m
 A = 2.4;                        % the bigger cube side length
-sepRadius = 0.2*A/N;
-jitter = 1;
+sepRadius = 0.4*A/N;
+jitter = 0;
 %%
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;
@@ -24,10 +24,26 @@ r2 = sqrt(5);
 threshold = .7;                 % domain choice threshold (used for strictly positive density)
 adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;
+
+s = char(mfilename('fullpath'));
+cd(s(1:end-12))                         % cd to the mfile folder
 if ~exist('Output','dir')
     mkdir Output;
 end
-fileID = fopen('./Output/console.txt','w');
+try 
+    load('./Output/unit_lattice_radius.mat','DELTA','CUBE_SHRINK')
+    if (delta ~= DELTA) || (cubeShrink ~= CUBE_SHRINK)
+        throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
+    end
+catch
+    fprintf('\nLooks like the interpolation table for the number of lattice\n');
+    fprintf('nodes is missing or not up to date... Hold on there, I''ll make\n'); 
+    fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
+    fprintf('do it once.');
+    lattice_by_count(2000,delta,cubeShrink,'y');
+    fprintf('...\nDone.\n\n')
+end
+
 
 %% Populate vertices of the unit cube 
 cubeVectors = zeros(dim, oct);                                                                
@@ -54,10 +70,10 @@ cornerIndices = true(1,size(corners,2));  %logical(sum(corners_bool(IDX),2));
 cornersUsed = corners(:,cornerIndices);
 cornersDensity = densityF(cornersUsed);
 cornersAveragedDensity = mean(cornersDensity(IDX'),1);        
-cornersRadii = sepRadius * cornersAveragedDensity;               
-currentNumNodes = boxRadiusNum(cornersRadii*N/A);
+cornersRadii = sepRadius * cornersAveragedDensity;
+currentNumNodes = num_radius(cornersRadii*N/A);
 % % % Note that the maximum number of nodes is capped in the following
-% line: not doing it can cause up to a thousand of nodes in a single box.
+% line: not doing it can cause up to a thousand nodes in a single box.
 currentNumNodes = min([currentNumNodes; maxNodesPerBox*ones(1,numel(currentNumNodes))],[],1);
 nodes = zeros(dim,sum(currentNumNodes));
 previousNodes = [0 cumsum(currentNumNodes)];
@@ -103,7 +119,7 @@ fprintf('\n');
 %% Repel and save nodes
 % fprintf( fileID, 'Performing %d repel steps.\n',  repelSteps);
 fprintf( 'Performing %d repel steps.\n',  repelSteps)
-cnf = repel(cnf, kValue, repelSteps, @in_domain, repelPower, densityF, fileID,jitter);
+cnf = repel(cnf, kValue, repelSteps, 0, repelPower, densityF, 0,jitter);
 toc 
 
 %% Plot the results
@@ -111,6 +127,7 @@ pbaspect([1 1 1])
 % view([1 1 0])
 F = figure(1);
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+
 
 % savefig(F,'./Output/nodes','compact')
 % save('slanttrui.mat', 'cnf')
