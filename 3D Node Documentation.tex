@@ -1,11 +1,9 @@
-\documentclass[10pt]{amsart}
-
-\usepackage{amssymb,hyperref,bm,graphicx,subcaption}
-% \linespread{1.2}
+\documentclass{amsart}
+\usepackage{hyperref,bm,graphicx,microtype}
 \usepackage[
 hmarginratio={1:1},     % equal left and right margins
 vmarginratio={1:1},     % equal top and bottom margins
-textwidth=400pt,        % new text width
+%textwidth=400pt,        % new text width
 heightrounded,          % always useful
 %%bindingcorrection=5mm,  % binding correction
 ]{geometry}
@@ -18,68 +16,110 @@ heightrounded,          % always useful
 \date{\today}
 
 \newcommand{\ndbox}{\mathcal{B}}
-
+\newcommand{\lat}{\mathcal{L}}
+\newcommand{\knn}{\textsc{\textit{k}nn}}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
 \begin{document}
-
 \maketitle
+\section{Introduction}
 
-\section{Overview}
+Applications of radial basis functions (RBFs) to constructing PDE solvers and simulations require an efficient way of distributing the centers of basis elements on the working domain. It is important to be able to guarantee separation of the centers, as well as to ensure that the distribution process can be easily scaled for massive numbers of the nodes and complicated domains. Yet another challenge arises when it is necessary to reproduce non-uniform distributions, as is the case, for example, when performing simulations with varying level of refinement.
 
-The goal is to develop a method for distributing nodes on arbitrarily shaped domains in a way that would 
+Recall \cite{Fornberg2015} that an RBF is a linear combination of the form
+\begin{equation}\label{rbf}
+s(x) = \sum_{k=1}^{n} \lambda_k \phi(\|x-x_k\|),
+\end{equation}
+where $ \phi(\cdot) $ is a radial function, and $ \{x_k\}_{k=1}^n $ is the collection of . A common choice of $ \phi $ is the Gaussian $ e^{-(\epsilon r)^2} $, although one may also use $ 1/(1+(\epsilon r)^2), \ r^{2m}\log(r), m\in\mathbb N $, etc. In our discussion we will only consider $ \phi(x) = e^{(-\epsilon r)^2} $. It is well-known that the matrix
+\[ A =   \begin{bmatrix}
+\phi(\|x_1-x_1\|)& \phi(\|x_1-x_2\|) & \ldots & \phi(\|x_1-x_n\|) \\ 
+\phi(\|x_2-x_1\|)& \phi(\|x_2-x_2\|) & \ldots & \phi(\|x_2-x_n\|) \\
+\vdots& \vdots  &  & \vdots  \\ 
+\phi(\|x_n-x_1\|)& \phi(\|x_n-x_2\|) & \ldots & \phi(\|x_n-x_n\|) \\
+\end{bmatrix}  \]
+is positive-definite as soon as the nodes $ x_1\ldots x_n $ are all distinct, and therefore under this assumption there exists an $ n $-point RBF interpolant for any function data. A different question, however, is whether the matrix $ A $ will be well-conditioned. To achieve this, one must guarantee that the RBF centers are separated. Another factor is whether they are mutually aligned, in particular, in the planar case lattice nodes perform much worse than Halton nodes \cite{Fornberg2015}, or the quasi-uniform nodes constructed by the third and fourth authors \cite{Fornberg2015a}.
+
+Our goal here is to develop a method for distributing nodes in arbitrarily shaped spatial domains in a way that would 
 \begin{itemize}
  \item be suitable for mesh-free PDE discretizations using RBFs, i.e., produce well-separated and locally regular node sets;
  \item allow for a variable density function;
  \item be massively parallel.
 \end{itemize}
 
-\section{Quasi Monte-Carlo methods}
+\section{Choice of method}
+\subsection{Quasi Monte-Carlo methods}
+In the context of distributing points on a set, it is natural to consider the Monte-Carlo method and related techniques. Since the 
 
-The key element of our approach consists in distributing the node set in a deterministic way so that to guarantee low discrepancy between the desired and the actual densities.
+The key element of our approach consists in distributing the node set in a deterministic way so that to guarantee low discrepancy between the desired and the achieved densities. 
+To that end, we employ what we will call an \textit{irrational lattice} (IL):
+\begin{equation}\label{irr_lat}
+	\lat = \bigg\{\left({i}/{n}, \left\{\alpha{i} \right\}, \{ \beta {i}  \}\right)\bigg\}_{i=1}^n.
+\end{equation} 
+The node configuration is produced by dividing the working domain into voxels and placing a scaled version of the lattice \eqref{irr_lat} in each voxel. This results in a collection of points with piecewise constant density; gradually refining the domain partition will lead to the improved piecewise approximation of the required smooth density. The motivation for using an IL comes in part from the desire to avoid recursive data structures, which can be detrimental to the overall performance, and in part is motivated by the existing results on the discrepancy of such lattices. It is known for example, that the two-dimensional ILs have the optimal order if $ L^2 $ discrepancy, \cite{Bilyk2012}, \cite{Bilyk2013}. Furthermore, in all dimensions ILs are uniformly distributed \cite[Chapter 1.6]{Kuipers2006}, that is, the fraction of lattice points inside any rectangular box with faces parallel to the coordinate planes converges to its volume. The simple linear structure of ILs makes them especially attractive for SIMD-parallelization.
+
+\subsection{Riesz energy}
+To deal with the ill-conditioning of matrix $ A $ that may result from lattice alignment of nodes, and to improve local separation, we further apply the Riesz energy minimization technique. For a collection of points $ \bs{X}_1,\ldots,\bs{X}_n $ lying in the working domain in $ d $-dimensional Euclidean space, we define the Riesz $ s $-energy as 
+\[ E_s(\bs{X}_1,\ldots,\bs{X}_n) = \sum_{i=1}^{n}\sum_{j=1}^{i-1} \frac{1}{ \|\bs{X}_i - \bs{X}_j\|^s}. \]
+If the value of this functional for a particular configuration is close to the minimal over the $ n $-point subsets of the working domain, such a configuration is well-separated, \cite{Hardin2005}. The value of the exponent $ s $ is chosen so that $ s\geq d $ to ensure that the energy functional is sufficiently repulsive; it is known from the classical potential theory that for $ s<d $ the minimal energy configurations are not necessarily uniform, and their local structure depends on the shape of the domain \cite{Landkof1972}. As will be clear from the following discussion, any reasonable symmetric kernel increasing to infinity towards the diagonal and smooth away from it would produce similar results. We chose the Riesz kernel $ \kappa_s(\bs{x},\bs{y})=\|\bs{x}-\bs{y}\|^{-s} $ because of the extensive existing theory of its behavior.
+
+\section{The algorithm\except{toc}{\protect\footnotemark}}
+\footnotetext{The interested reader will find a Matlab implementation of the algorithm described here at \texttt{\url{https://github.com/OVlasiuk/3dRBFnodes.git}}.}
 
 
-
-\section{Matlab code}
-
-The Git repository containing Matlab code is available at  \texttt{\url{https://github.com/OVlasiuk/3dRBFnodes.git}}.
-
-\section{Description of the algorithm}
-
-For convenience, we assume that the support of the desired distribution is a subset of the unit cube. Suppose the local node density is prescribed by a bounded function $\rho: \mathcal{C} =[0,1]^3 \to [-D,D]$. From now on, let $ \alpha, \beta\in\mathbb{R}\setminus\mathbb{Q} $ be a fixed pair of irrational numbers. Consider the following algorithm for generating nodes with density $ \rho $:  
+For this exposition assume that the support of the desired node distribution is a subset of the $ 3 $-dimensional unit cube. One can easily introduce the modifications necessary for the treatment of a higher-dimensional case. Suppose the local node density is prescribed by a bounded function $\rho:\mathcal{C} =[0,1]^3 \to [0,D]$, so that the distance to the nearest neighbor from a node $ \boldsymbol{x} $ has to be close to $ \rho(\bs{x}) $. From now on, let $ \alpha, \beta\in\mathbb{R}\setminus\mathbb{Q} $ be a fixed pair of irrational numbers, linearly independent over the rationals. Consider the following algorithm for generating nodes with density $ \rho $:  
 
 \begin{enumerate}
 	
-	\item \label{subcubes}  Partition $\mathcal{C}$ into $N_b^3$ equal subcubes (``boxes'') of side length $1/N_b$ with faces parallel to the coordinate planes. Fix $n_\text{max}$ as the maximum possible number of nodes in each box in the initial distribution. 
+	\item \label{subcubes}  Partition $\mathcal{C}$ into $N_b^3$ equal subcubes called \textit{boxes} of side length $1/N_b$ with faces parallel to the coordinate planes. The choice of $N_b$ corresponds to the resolution of the density of the resulting piecewise lattice.  Fix $n_\text{max}$ as the maximum possible number of nodes in each box in the initial distribution (to limit the memory consumption). 
 	
-	The choice of $N_b$ corresponds to the resolution of the density of the resulting piecewise lattice. The function $ \rho $, numbers $N_b$  and $n_\text{max}$ can be scaled to adjust the total number of nodes $N$ as desired. 
-%	Experimentally, choosing $n_\text{max} = 20$ and $N_b$ such that there are approximately $N/10$ total cubes seems to be a good choice.
-	
-	\item \label{box}  Let  $\{\ndbox_j\}_{j=1}^{N_b^3}$ be the collection of all such boxes, and $\{\boldsymbol{B}_j\}_{j=1}^{N_b^3}$ be their vertices that have the lowest sum of coordinates, respectively. Denote by $\bar{\rho}_j$ the average of the values of $\rho$ at \textit{all} corners of $\ndbox_j$. We fill the $ \mathcal{B}_j $ with the appropriate number of nodes $ n_j $, defined as 
-	\[  n_j = \left(\lfloor  n_\text{max} \frac{ \bar{\rho}_j}{D} \rfloor \right)_+.  \] 
-	Here and below we write $\left\{x\right\}:= x-\left\lfloor x\right\rfloor$   and $ \left(x\right)_+:=(x+|x|)/2 $, the fractional and the positive part of $ x $ respectively. The nodes are drawn from an irrational lattice,  scaled and translated to $\ndbox_j$:
-	\[ \boldsymbol{B}_j + \sigma \left(\frac{i}{n_j}, \left\{\alpha\frac{i}{n_j}\right\}, \bigg\{\beta\frac{i}{n_j}\bigg\}\right) + \delta, \qquad i=1\dots n_j, \]
+	\item \label{box}  Let  $\{\ndbox_j\}_{j=1}^{N_b^3}$ denote all such boxes, and $\{\boldsymbol{C}_j\}_{j=1}^{N_b^3}$ be their vertices with the lowest sum of coordinates, respectively. We will refer to $ \bs{C}_j $'s as the \textit{corners} of the boxes. Denote by $\{\bar{\rho}_j\}_{j=1}^{N_b^3}$ the averages of the values of $\rho$ at $ 26 = 3^3-1 $ corners  nearest to $ \bs{C}_j $. We will fill $ \mathcal{B}_j $ with a scaled and translated version of \eqref{irr_lat} with $ n=n_j $, defined as 
+	\[  n_j = \min(L(\bar{\rho}_j),n_\text{max}), \]
+	where $ L(r),\ r>0 $, is the number of nodes in the lattice \eqref{irr_lat}, for which the minimal separation distance is the closest to $ r N_b $, see Remark \ref{Lfun} below.
+	The scaled and translated nodes in \eqref{irr_lat} become
+	\[ \lat_j =  \boldsymbol{C}_j + \frac{\sigma}{N_b}  \left({i}/{n}, \left\{\alpha{i} \right\}, \{ \beta {i}  \}\right)  + \bs{\delta}, \qquad i=1\dots n_j, \]
 	where 
 	\[ \begin{aligned}
-	 \sigma&={ 1 - n_\text{max}^{-1/\dim} }\\
-	 \delta&=\frac{1}{2Nn_\text{max}^{1/\dim}}. 
+	 \sigma&={ 1 - \frac{1}{c}\left(\frac{1}{n_\text{max}}\right)^{1/\dim} }\\
+	 \bs{\delta}&=\frac{1}{cN_b }\left(\frac{1}{n_\text{max}}\right)^{1/\dim}\cdot \textbf{diag}(1,1,1). 
 	\end{aligned}\]
-	 While any pair of irrational values of $\alpha$ and $\beta$ that are linearly independent over $ \mathbb{Q} $ will give an equidistributed lattice as $n_j$ grows, certain values  may perform better than others. In particular, adjustments can be made to provide better distribution for small $n_j$. We currently use $\alpha = \sqrt{2}, \beta = \sqrt{5}$.
+	 While any pair of irrational values of $\alpha$ and $\beta$ that are linearly independent over rationals will give a uniformly distributed lattice as $n_j$ grows, certain values  may perform better than others. In particular, adjustments can be made to improve the distribution for small $n_j$. Our implementation uses $\alpha = \sqrt2,\,	 \beta = (\sqrt5-1)/\sqrt2$; this choice was made because the golden ratio produces a low-discrepancy lattice in $ \mathbb{R}^2 $, \cite{Bilyk2013}.
 	
-	\item \label{fill_boxes} Fill all the boxes using step \eqref{box}. Since this is done independently for different boxes, it lends itself well to parallelization. Consider the boxes for which $ \bar{\rho}_j =0 $ (or is small enough); evaluate the density function on all the nodes in such boxes and discard those where $ \rho $ is not positive.
+	\item \label{fill_boxes} Fill the boxes using step \eqref{box}. This can be parallelized by allocating one worker per box. If the density support does not take the whole domain, remove the nodes outside it.
 	
-	\item Perform $ T $ iterations of electrostatic repelling, using $ K $ nearest neighbors of each node. The values of $ K $ and $ T $ can be adjusted to achieve desired trade-off between execution speed and local properties. Even relatively small values of $ K,\ T $ ($ \approx 15 $ for about 100 000 nodes) produce good results. \\
-	Firstly, determine the minimal separation distance $ \Delta $ of the node set $ \{\boldsymbol{N}_m\}_{m=1}^M $ constructed in steps \eqref{subcubes}-\eqref{fill_boxes}. Then for each node $ \boldsymbol{N}_m $ find its $ K $ nearest neighbors, $ \{\boldsymbol{N}_{m,k}\}_{k=1}^K $ . The initial configuration is considered the $ 0 $-th iteration, $ \{\boldsymbol{N}_m^{(0)}\}_{m=1}^M := \{\boldsymbol{N}_m\}_{m=1}^M $. For the $t^{th}$ repel step, given a node $\boldsymbol{N}_m^{(t)}$ with $ k $ nearest nodes $\{ \boldsymbol{N}_{m,k}^{(t)}\}_{k=1}^K$, form the weighted vector sum
+	\item Perform $ T $ iterations of gradient descent on the Riesz energy functional using $ K $ nearest neighbors of each node. 
+	Firstly, determine the minimal separation distance $ \Delta $ of the node set $ \{\boldsymbol{N}_m\}_{m=1}^M $ constructed in steps \eqref{subcubes}-\eqref{fill_boxes}. Then for each node $ \boldsymbol{N}_m $ find its $ K $ nearest neighbors, $ \{\boldsymbol{N}_{j(m,k)}\}_{k=1}^K $ . Let the initial configuration be the $ 0 $-th iteration, $ \{\boldsymbol{N}_m^{(0)}\}_{m=1}^M := \{\boldsymbol{N}_m\}_{m=1}^M $. For the $t^{th}$ repel step, given a node $\boldsymbol{N}_m^{(t)}$ with $ k $ nearest nodes $\{ \boldsymbol{N}_{j(m,k)}^{(t)}\}_{k=1}^K$, form the weighted vector sum
+	\[ \bs{G}_m^{(t)} =\sum_{k=1}^{K}\frac{\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{j(m,k)}^{(t)} }{\|\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{j(m,k)}^{(t)} \|^{s+1}}, \]
+	then update the node position as
 	\[\boldsymbol{N}_m^{(t+1)} = \begin{cases}
-	\sum_{k=1}^{K}\frac{\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{m,k}^{(t)} }{\|\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{m,k}^{(t)} \|^{s+1}}, &\text{if this sum in inside }\text{supp}\,\rho; \\
-	\boldsymbol{N}_m^{(t)}, &\text{otherwise,}
+	\bs{N}_m^{(t)} + \frac{\Delta}{t\|\bs{G}_m^{(t)}\|}\bs{G}_m^{(t)} &\text{if this sum in inside }\text{supp}\,\rho; \\
+	\bs{N}_m^{(t)}, &\text{otherwise.}
 	\end{cases} \]
-	for some $s>3$.
-	The \textsc{\textit{k}nn}-tree is not recomputed for each repel step.
+	Recall that we use $s>3$.
+	It is important to note that we do not update the neighbor structure after each of the above iterations: the indices $ j(m,k) $ are not recomputed.
 \end{enumerate}
+
+\begin{remark}\label{Lfun}
+	\textbf{Explain how the L(r) function works}
+\end{remark}
+\begin{remark}\label{KandT}
+	The values of $ K $ and $ T $ can be adjusted to achieve a trade-off between execution speed and local properties. In practive, even relatively small values of $ K,\ T $ ($ \approx 15 $ for about 100~000 nodes) produce good results. \\
+\end{remark}
+\begin{remark}
+	We only put nodes in boxes where there was nonzero density, so when removing stuff late we don't have much surplus.
+\end{remark}
+\begin{remark}
+	Reference to the external paper for the repel step.
+\end{remark}
+It wasn't important which minimization method we applied to the Riesz $ s $-energy, rather the gradient descent was chosen due to its simplicity. Note also that we do not implement a proper line search, yet even the rudimentary substitute that was used gives satisfactory results. In fact, 
+
 This algorithm generates (depending on the computational cost of the density function $ \rho $ and values of $ K,\  T$, etc., used) one million nodes in 1.5 minutes.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\linewidth]{europe1.png}
+	\includegraphics[width=.7\linewidth]{europe1.png}
 	\caption{Middle East and Europe, represented by 1 138 095 nodes after 20 repelling iterations; K=20. Altitudes are exaggerated by a factor of 100. The total running time was 238.292 seconds.}
 	\label{europe}
 \end{figure}
@@ -99,16 +139,15 @@ This algorithm generates (depending on the computational cost of the density fun
 %	\caption{Above, the histogram of the nearest neighbor distribution before(blue) and after (red) the repelling procedure. Below, a fragment of Greece.} 
 %	\label{fig:mult}
 %\end{figure}
-
-\section{GPU implementation}
-
+\section{Sample distributions}
 
 
 \section{Future work}
 \begin{itemize}
-\item The generation of the lattice on each box should be improved. We are working on transforming the lattice so that the density varies linearly within each box. This would make the density of the initial point generation more accurate and fewer repulsion steps would be needed.
-\item Ideally the node distribution restricted to the boundary should be a reasonable 2D node distribution of variable density.
-\item GPU-version of the ``main'' part \cite{Recipes1989}
+	\item It seems that the foremost drawback of the above method for many applications may be that the nodes are (almost) coplanar. This issue is akin to the property of congruential number generator described in \cite{Marsaglia1968}.
+	\item The generation of the lattice on each box should be improved. We are working on transforming the lattice so that the density varies linearly within each box. This would make the density of the initial point generation more accurate and fewer repulsion steps would be needed.
+	\item Ideally the node distribution restricted to the boundary should be a reasonable 2D node distribution of variable density.
+	\item GPU-version of the ``main'' part \cite{Recipes1989}
 \end{itemize}
 
 \bibliography{nodes}
