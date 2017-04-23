@@ -4,23 +4,22 @@
 % TODO: even more masks
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 20;                         % number of boxes per side of the cube
+N = 50;                         % number of boxes per side of the cube
 maxNodesPerBox = 40;  
-repelSteps = 30;                % the number of iterations of the repel.m routine
+repelSteps = 20;                % the number of iterations of the repel.m routine
 densityF = @density;            %     put the handle to your density function here
-kValue = 15;                    % number of nearest neighbors used in the repel.m
-A = 2.4;                        % the bigger cube side length
-sepRadius = 0.4*A/N;
-jitter = 0;
+kValue = 20;                    % number of nearest neighbors used in the repel.m
+A = 6;                          % The outer cube sidelength; all will be 
+                                %  contained in [-A/2, A/2]^3. 
+jitter = 1;
 %%
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
-repelPower = 5;
-bins = 100;
+repelPower = 5;                 
 oct = 2^dim;
 delta = 1/(256* N * maxNodesPerBox^(1/dim));
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
 r1 = sqrt(2);
-r2 = sqrt(5);
+r2 = (sqrt(5)-1)/(sqrt(2));
 threshold = .7;                 % domain choice threshold (used for strictly positive density)
 adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;
@@ -36,10 +35,10 @@ try
         throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
     end
 catch
-    fprintf('\nLooks like the interpolation table for the number of lattice\n');
-    fprintf('nodes is missing or not up to date... Hold on there, I''ll make\n'); 
+    fprintf('\nLooks like the interpolation table for this number of lattice\n');
+    fprintf('nodes is missing or not up to date... Hang on there, I''ll make\n'); 
     fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
-    fprintf('do it once.');
+    fprintf('do it once.\n');
     lattice_by_count(2000,delta,cubeShrink,'y');
     fprintf('...\nDone.\n\n')
 end
@@ -70,7 +69,7 @@ cornerIndices = true(1,size(corners,2));  %logical(sum(corners_bool(IDX),2));
 cornersUsed = corners(:,cornerIndices);
 cornersDensity = densityF(cornersUsed);
 cornersAveragedDensity = mean(cornersDensity(IDX'),1);        
-cornersRadii = sepRadius * cornersAveragedDensity;
+cornersRadii = cornersAveragedDensity;
 currentNumNodes = num_radius(cornersRadii*N/A);
 % % % Note that the maximum number of nodes is capped in the following
 % line: not doing it can cause up to a thousand nodes in a single box.
@@ -119,14 +118,15 @@ fprintf('\n');
 %% Repel and save nodes
 % fprintf( fileID, 'Performing %d repel steps.\n',  repelSteps);
 fprintf( 'Performing %d repel steps.\n',  repelSteps)
-cnf = repel(cnf, kValue, repelSteps, 0, repelPower, densityF, 0,jitter);
-toc 
+cnf = repel(cnf,kValue,repelSteps,A,0,densityF,jitter,repelPower,0);
+ 
 
 %% Plot the results
 pbaspect([1 1 1])
 % view([1 1 0])
 F = figure(1);
-plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k');
+msize = ceil(max(1, 22-3.8*log10(size(cnf,2)) ));
+plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
 
 
 % savefig(F,'./Output/nodes','compact')

@@ -1,4 +1,6 @@
 function [d] = density_earth(x, y, z)
+%DENSITY_EARTH 
+% d = density_earth(x, y, z)
 % returns density above the Earth surface that decreases with height
 outer = 1.1;
 

@@ -1,5 +1,6 @@
 function [is, radii] = in_domain(x, y, z)
-%% [is, radii] = in_domain(x, y, z)
+%IN_DOMAIN 
+% [is, radii] = in_domain(x, y, z)
 % Check if the point (x,y,z) lies in the atmosphere-like layer; uses ETOPO1
 % data and linear interpolation to compare the norm of (x,y,z) with that of
 % the Earth surface at the same values of spherical angles.

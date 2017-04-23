@@ -92,7 +92,7 @@ clf;
 fprintf( fileID, 'Performing %d repel steps.\n',  repel_steps);
 fprintf( 'Performing %d repel steps.\n',  repel_steps)
 cnf = repel(cnf, k_value, repel_steps, @in_domain, repel_power, density_f, fileID, 0);
-toc 
+ 
 
 pbaspect([1 1 1])
 % view([1 1 0])
