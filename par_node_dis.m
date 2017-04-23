@@ -11,7 +11,7 @@ densityF = @density;            %     put the handle to your density function he
 kValue = 20;                    % number of nearest neighbors used in the repel.m
 A = 6;                          % The outer cube sidelength; all will be 
                                 %  contained in [-A/2, A/2]^3. 
-jitter = 1;
+jitter = 0;
 %%
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;                 
