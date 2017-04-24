@@ -119,14 +119,14 @@ for iter=1:repel_steps
     directions = directions + noise() * mean(sqrt(sum(directions.*directions,1)));
 
 % % % % % % %    Uncomment to use external field term.    % % % % % % % % %
-%     cnf_for_gradient = reshape(repmat(cnf,dim,1),dim,[]);
-%     finite_difference1 = repmat(eye(3), 1, size(cnf,2));
-%     finite_difference2 = repmat(-eye(3), 1, size(cnf,2));
-%     cnf_for_gradient1 = cnf_for_gradient + step*finite_difference1;
-%     cnf_for_gradient2 = cnf_for_gradient + step*finite_difference2;
-%     density_gradient = (densityF(cnf_for_gradient1)-densityF(cnf_for_gradient2))/step/2.0;
-%     density_gradient = reshape(density_gradient, dim,[]);
-%     directions = directions + pt_num^(s/dim) * density_gradient;
+% %     cnf_for_gradient = reshape(repmat(cnf,dim,1),dim,[]);
+% %     finite_difference1 = repmat(eye(3), 1, size(cnf,2));
+% %     finite_difference2 = repmat(-eye(3), 1, size(cnf,2));
+% %     cnf_for_gradient1 = cnf_for_gradient + step*finite_difference1;
+% %     cnf_for_gradient2 = cnf_for_gradient + step*finite_difference2;
+% %     density_gradient = (densityF(cnf_for_gradient1)-densityF(cnf_for_gradient2))/step/2.0;
+% %     density_gradient = reshape(density_gradient, dim,[]);
+% %     directions = directions - pt_num^(s/dim) * density_gradient;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 % % % %   Riesz gradient for this node configuration 

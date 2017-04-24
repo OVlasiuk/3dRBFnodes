@@ -1,7 +1,7 @@
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: PARALLEL CPUS % % % % % % %
 
 % TODO: dimension-agnostic code
-% TODO: even more masks
+
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
 N = 50;                         % number of boxes per side of the cube
@@ -12,7 +12,7 @@ kValue = 20;                    % number of nearest neighbors used in the repel.
 A = 6;                          % The outer cube sidelength; all will be 
                                 %  contained in [-A/2, A/2]^3. 
 jitter = 0;
-%%
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;                 
 oct = 2^dim;
@@ -25,13 +25,19 @@ adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;
 
 s = char(mfilename('fullpath'));
-cd(s(1:end-12))                         % cd to the mfile folder
+cd(s(1:end-12))                         % cd to the mfile folder; 
+                                        % The constant 12 depends on the
+                                        % length of the filename.
 if ~exist('Output','dir')
     mkdir Output;
 end
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
-    load('./Output/unit_lattice_radius.mat','DELTA','CUBE_SHRINK')
-    if (delta ~= DELTA) || (cubeShrink ~= CUBE_SHRINK)
+    load('./Output/unit_lattice_radius.mat','DELTA', 'CUBE_SHRINK','R1', 'R2')
+    if (delta ~= DELTA)...
+            || (cubeShrink ~= CUBE_SHRINK)...
+            || (r1 ~= R1)...
+            || (r2 ~= R2)
         throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
     end
 catch
@@ -39,11 +45,11 @@ catch
     fprintf('nodes is missing or not up to date... Hang on there, I''ll make\n'); 
     fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
     fprintf('do it once.\n');
-    lattice_by_count(2000,delta,cubeShrink,'y');
+    lattice_by_count(2000,delta,cubeShrink,r1,r2,'y');
     fprintf('...\nDone.\n\n')
 end
 
-
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Populate vertices of the unit cube 
 cubeVectors = zeros(dim, oct);                                                                
 for i=1:dim

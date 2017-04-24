@@ -1,5 +1,5 @@
 \documentclass{amsart}
-\usepackage{hyperref,bm,graphicx,microtype}
+\usepackage{hyperref,bm,graphicx,microtype,color,multicol,subcaption}
 \usepackage[
 hmarginratio={1:1},     % equal left and right margins
 vmarginratio={1:1},     % equal top and bottom margins
@@ -23,6 +23,9 @@ heightrounded,          % always useful
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{example}[theorem]{Example}
+\newenvironment{Figure}
+{\par\medskip\noindent\minipage{\linewidth}}
+{\endminipage\par\medskip}
 \begin{document}
 \maketitle
 \section{Introduction}
@@ -75,47 +78,62 @@ For this exposition assume that the support of the desired node distribution is 
 	
 	\item \label{subcubes}  Partition $\mathcal{C}$ into $N_b^3$ equal subcubes called \textit{boxes} of side length $1/N_b$ with faces parallel to the coordinate planes. The choice of $N_b$ corresponds to the resolution of the density of the resulting piecewise lattice.  Fix $n_\text{max}$ as the maximum possible number of nodes in each box in the initial distribution (to limit the memory consumption). 
 	
-	\item \label{box}  Let  $\{\ndbox_j\}_{j=1}^{N_b^3}$ denote all such boxes, and $\{\boldsymbol{C}_j\}_{j=1}^{N_b^3}$ be their vertices with the lowest sum of coordinates, respectively. We will refer to $ \bs{C}_j $'s as the \textit{corners} of the boxes. Denote by $\{\bar{\rho}_j\}_{j=1}^{N_b^3}$ the averages of the values of $\rho$ at $ 26 = 3^3-1 $ corners  nearest to $ \bs{C}_j $. We will fill $ \mathcal{B}_j $ with a scaled and translated version of \eqref{irr_lat} with $ n=n_j $, defined as 
+	\item \label{onebox}  Let  $\{\ndbox_j\}_{j=1}^{N_b^3}$ denote all such boxes, and $\{\boldsymbol{C}_j\}_{j=1}^{N_b^3}$ be their vertices with the lowest sum of coordinates, respectively. We will refer to $ \bs{C}_j $'s as the \textit{corners} of the boxes. Denote by $\{\bar{\rho}_j\}_{j=1}^{N_b^3}$ the averages of the values of $\rho$ at $ 26 = 3^3-1 $ corners  nearest to $ \bs{C}_j $. We will fill $ \mathcal{B}_j $ with a scaled and translated version of \eqref{irr_lat} with $ n=n_j $, defined as 
 	\[  n_j = \min(L(\bar{\rho}_j),n_\text{max}), \]
 	where $ L(r),\ r>0 $, is the number of nodes in the lattice \eqref{irr_lat}, for which the minimal separation distance is the closest to $ r N_b $, see Remark \ref{Lfun} below.
 	The scaled and translated nodes in \eqref{irr_lat} become
 	\[ \lat_j =  \boldsymbol{C}_j + \frac{\sigma}{N_b}  \left({i}/{n}, \left\{\alpha{i} \right\}, \{ \beta {i}  \}\right)  + \bs{\delta}, \qquad i=1\dots n_j, \]
 	where 
 	\[ \begin{aligned}
-	 \sigma&={ 1 - \frac{1}{c}\left(\frac{1}{n_\text{max}}\right)^{1/\dim} }\\
-	 \bs{\delta}&=\frac{1}{cN_b }\left(\frac{1}{n_\text{max}}\right)^{1/\dim}\cdot \textbf{diag}(1,1,1). 
+	 \sigma&={ 1 - \frac{1}{c}\left(\frac{1}{n_\text{max}}\right)^{1/3} }\\
+	 \bs{\delta}&=\frac{1}{cN_b }\left(\frac{1}{n_\text{max}}\right)^{1/3}\cdot \textbf{diag}(1,1,1). 
 	\end{aligned}\]
-	 While any pair of irrational values of $\alpha$ and $\beta$ that are linearly independent over rationals will give a uniformly distributed lattice as $n_j$ grows, certain values  may perform better than others. In particular, adjustments can be made to improve the distribution for small $n_j$. Our implementation uses $\alpha = \sqrt2,\,	 \beta = (\sqrt5-1)/\sqrt2$; this choice was made because the golden ratio produces a low-discrepancy lattice in $ \mathbb{R}^2 $, \cite{Bilyk2013}.
+	 While any pair of irrational values of $\alpha$ and $\beta$ that are linearly independent over rationals will give a uniformly distributed lattice as $n_j$ grows, certain values  may perform better than others. In particular, adjustments can be made to improve the distribution for small $n_j$. Our implementation uses $\alpha = \sqrt2,\,	 \beta = (\sqrt5-1)/\sqrt2$; this choice was made because the golden ratio produces a low-discrepancy lattice in $ \mathbb{R}^2 $, \cite{Bilyk2013}. In a general dimension the exponent $ 1/3 $ should be replaced with $ 1/\dim $.
 	
-	\item \label{fill_boxes} Fill the boxes using step \eqref{box}. This can be parallelized by allocating one worker per box. If the density support does not take the whole domain, remove the nodes outside it.
+	\item \label{fill_boxes} Fill the boxes using step \eqref{onebox}. This can be parallelized by allocating one worker per box. If the density support does not take the whole domain, remove the nodes outside it.
 	
 	\item Perform $ T $ iterations of gradient descent on the Riesz energy functional using $ K $ nearest neighbors of each node. 
 	Firstly, determine the minimal separation distance $ \Delta $ of the node set $ \{\boldsymbol{N}_m\}_{m=1}^M $ constructed in steps \eqref{subcubes}-\eqref{fill_boxes}. Then for each node $ \boldsymbol{N}_m $ find its $ K $ nearest neighbors, $ \{\boldsymbol{N}_{j(m,k)}\}_{k=1}^K $ . Let the initial configuration be the $ 0 $-th iteration, $ \{\boldsymbol{N}_m^{(0)}\}_{m=1}^M := \{\boldsymbol{N}_m\}_{m=1}^M $. For the $t^{th}$ repel step, given a node $\boldsymbol{N}_m^{(t)}$ with $ k $ nearest nodes $\{ \boldsymbol{N}_{j(m,k)}^{(t)}\}_{k=1}^K$, form the weighted vector sum
 	\[ \bs{G}_m^{(t)} =\sum_{k=1}^{K}\frac{\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{j(m,k)}^{(t)} }{\|\boldsymbol{N}_m^{(t)}-\boldsymbol{N}_{j(m,k)}^{(t)} \|^{s+1}}, \]
 	then update the node position as
-	\[\boldsymbol{N}_m^{(t+1)} = \begin{cases}
+	\begin{equation}\label{node_update}
+	\boldsymbol{N}_m^{(t+1)} = \begin{cases}
 	\bs{N}_m^{(t)} + \frac{\Delta}{t\|\bs{G}_m^{(t)}\|}\bs{G}_m^{(t)} &\text{if this sum in inside }\text{supp}\,\rho; \\
 	\bs{N}_m^{(t)}, &\text{otherwise.}
-	\end{cases} \]
-	Recall that we use $s>3$.
+	\end{cases} 
+	\end{equation}
+	Recall that we use an exponent $s>3$.
 	It is important to note that we do not update the neighbor structure after each of the above iterations: the indices $ j(m,k) $ are not recomputed.
 \end{enumerate}
 
 \begin{remark}\label{Lfun}
-	\textbf{Explain how the L(r) function works}
+	The function $ L(r) $ used in step \eqref{onebox} is an approximate number of nodes in the unit cube, placed according to \eqref{irr_lat}, such that the separation distance is (close to) $ r $. To compute it, we tabulate minimal separation distances in a configuration resulting from putting $ n $ nodes in each of $ 27 = 3^3 $ adjacent unit cubes, after shrinking and translating the lattice \eqref{irr_lat}. For our applications, $ 1\leq n \leq 2000 $ was sufficient. In general, putting more nodes in individual boxes is not feasible as it decreases the density resolution.
+ 	\begin{figure}
+ 		\centering
+ 		\begin{subfigure}{0.48\textwidth}
+	 		\includegraphics[width=\linewidth]{Figures/latseparation.pdf}
+ 		\end{subfigure}
+ 	~\hspace*{.04\textwidth}~
+		\begin{subfigure}{0.48\textwidth}
+			\includegraphics[width=\linewidth]{Figures/nodeplot.pdf}
+		\end{subfigure}
+	\caption{Left: 9 boxes with 2-dimensional irrational lattices with ratio $ (1+\sqrt{5})/2 $. A pair of nodes with the smallest separation is highlighted. Right: dependence of the separation distance on the number of nodes in a box. The 3-dimensional case shown.}		
+ 	\end{figure}
+ 	
+
+	
+	
 \end{remark}
 \begin{remark}\label{KandT}
 	The values of $ K $ and $ T $ can be adjusted to achieve a trade-off between execution speed and local properties. In practive, even relatively small values of $ K,\ T $ ($ \approx 15 $ for about 100~000 nodes) produce good results. \\
 \end{remark}
 \begin{remark}
-	We only put nodes in boxes where there was nonzero density, so when removing stuff late we don't have much surplus.
+	After partitioning the working domain into boxes, nodes are only placed in those with corners inside the density support. This means, step \eqref{fill_boxes} does not lead to much overhead when the nodes outside the support are removed.
 \end{remark}
 \begin{remark}
-	Reference to the external paper for the repel step.
+	If it is important to recover a particular distribution function more precisely, the sum $ \bs{G}_m^{(t)} $ can be extended to contain the term $ -M^{s/d} \widetilde\nabla \rho (\boldsymbol{N}_m^{(t)}) $, where we write $ \widetilde\nabla $ for a finite-difference approximation of the gradient. Exact expressions for the additional term from a given density function can be found in \cite{Hardin2017}.
 \end{remark}
-It wasn't important which minimization method we applied to the Riesz $ s $-energy, rather the gradient descent was chosen due to its simplicity. Note also that we do not implement a proper line search, yet even the rudimentary substitute that was used gives satisfactory results. In fact, 
-
-This algorithm generates (depending on the computational cost of the density function $ \rho $ and values of $ K,\  T$, etc., used) one million nodes in 1.5 minutes.
+It wasn't important which minimization method we applied to the Riesz $ s $-energy, rather the gradient descent was chosen due to its simplicity. Note, the second case in \eqref{node_update}, leading to shrinking of the step, can be thought of as a simplistic backtracking line search. It turns out to be sufficient for our purposes. 
 
 \begin{figure}
 	\centering
