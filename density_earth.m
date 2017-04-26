@@ -7,4 +7,4 @@ outer = 1.1;
 [~, surface_radii] = in_domain(x,y,z);
 [~, ~, radii] = cart2sph(x,y,z);
 
-d = 100000000*(outer-radii).^2./(outer-surface_radii);
+d = 10000000*(outer-radii).^2./(outer-surface_radii);

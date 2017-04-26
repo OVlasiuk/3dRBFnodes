@@ -4,7 +4,7 @@
 %% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 N = 50;                         % number of boxes per side of the cube
-max_nodes_per_box = 15;          % 
+max_nodes_per_box = 30;          % 
 repel_steps = 20;               % the number of iterations of the repel.m routine
 density_f = @density_earth;                % put the handle to your density function here
 k_value = 20;                   % number of nearest neighbors used in the repel.m
