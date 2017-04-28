@@ -25,6 +25,11 @@ adjacency = 3^dim;              % the number of nearest boxes to consider
 
 
 close all;
+s = char(mfilename('fullpath'));
+cd(s(1:end-10))                         % cd to the mfile folder; 
+                                        % The constant 12 depends on the
+                                        % length of the filename.
+addpath helpers/                                                                                
 if ~exist('Output','dir')
     mkdir Output;
 end

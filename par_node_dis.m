@@ -28,6 +28,7 @@ s = char(mfilename('fullpath'));
 cd(s(1:end-12))                         % cd to the mfile folder; 
                                         % The constant 12 depends on the
                                         % length of the filename.
+addpath helpers/                                        
 if ~exist('Output','dir')
     mkdir Output;
 end

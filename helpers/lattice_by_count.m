@@ -38,6 +38,6 @@ s = char(mfilename('fullpath'));
 cd(s(1:end-16))
 
 if SAVE == 'y'
-    save('./Output/unit_lattice_radius.mat', 'rtable','DELTA', 'CUBE_SHRINK',...
+    save('../Output/unit_lattice_radius.mat', 'rtable','DELTA', 'CUBE_SHRINK',...
     'R1', 'R2')
 end
