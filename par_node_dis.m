@@ -19,7 +19,7 @@ oct = 2^dim;
 delta = 1/(256* N * maxNodesPerBox^(1/dim));
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
 r1 = sqrt(2);
-r2 = (sqrt(5)-1)/(sqrt(2));
+r2 = (sqrt(5)+1)/(sqrt(2));
 threshold = .7;                 % domain choice threshold (used for strictly positive density)
 adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;
@@ -133,7 +133,7 @@ pbaspect([1 1 1])
 F = figure(1);
 msize = ceil(max(1, 22-3.8*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
-
+axis vis3d
 
 % savefig(F,'./Output/nodes','compact')
 % save('slanttrui.mat', 'cnf')
