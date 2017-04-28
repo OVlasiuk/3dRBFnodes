@@ -10,11 +10,24 @@ function [is, radii] = in_domain(x, y, z)
 % interpolation of ETOPO1
 % Input:
 % x,y,z - arrays of the x-, y-, z-coordinates of the input set of vectors.
-%%
+% 
+%   See also ETOPO1LOAD
 
+s = char(mfilename('fullpath'));
+cd(s(1:end-9))                          % cd to the mfile folder; 
+                                        % The constant 12 depends on the
+                                        % length of the filename.
 persistent Z;
 if isempty(Z)
-    load('z_transp.mat');    
+    try 
+        [Z, ~] = etopo('./Output');
+        Z = Z';
+    catch ME
+        ME.message
+        etopo1load;
+        [Z, ~] = etopo('./Output');
+        Z = Z';
+    end
 end
 outer = 1.1;
 inner = .9;
