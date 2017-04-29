@@ -48,7 +48,7 @@ catch
     fprintf('nodes is missing or not up to date... Hang on there, I''ll make\n'); 
     fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
     fprintf('do it once.\n');
-    lattice_by_count(500,delta,cubeShrink,r1,r2,'y');
+    lattice_by_count(2*maxNodesPerBox,delta,cubeShrink,r1,r2,'y');
     fprintf('...\nDone.\n\n')
 end
 
