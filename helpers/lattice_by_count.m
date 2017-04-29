@@ -34,10 +34,11 @@ parfor nodes_per_box=1:COUNT
     rtable(nodes_per_box) = min(D(:,2));
 end
 
-s = char(mfilename('fullpath'));
-cd(s(1:end-16))
-
 if SAVE == 'y'
+    s_old = pwd;
+    s = char(mfilename('fullpath'));
+    cd(s(1:end-16))
     save('../Output/unit_lattice_radius.mat', 'rtable','DELTA', 'CUBE_SHRINK',...
     'R1', 'R2')
+    cd(s_old)
 end

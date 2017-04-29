@@ -3,7 +3,10 @@
 % using the output of node_earth.m
 % 
 %      See also  NODE_EARTH
-node_earth
+s_old = pwd;
+s = char(mfilename('fullpath'));
+cd(s(1:end-5))
+run('../node_earth')
 
 CNF = repmat(cnf,6,1);
 e=[eye(3) -eye(3)];
@@ -65,3 +68,4 @@ figure(10);scatter3(chemi(1,Ihemi), chemi(2,Ihemi), chemi(3,Ihemi),...
 figure(11);plot3(chemi(1,Ihemi), chemi(2,Ihemi), chemi(3,Ihemi),  '.b',...
     'MarkerSize',5);view(az,el);grid on; axis vis3d;
 print('andes','-dpdf','-r300','-bestfit')
+cd(s_old)

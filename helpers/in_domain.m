@@ -12,7 +12,7 @@ function [is, radii] = in_domain(x, y, z)
 % x,y,z - arrays of the x-, y-, z-coordinates of the input set of vectors.
 % 
 %   See also ETOPO1LOAD
-
+s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-9))                          % cd to the mfile folder; 
                                         % The constant 12 depends on the
@@ -20,12 +20,12 @@ cd(s(1:end-9))                          % cd to the mfile folder;
 persistent Z;
 if isempty(Z)
     try 
-        [Z, ~] = etopo('./Output');
+        [Z, ~] = etopo('../Output');
         Z = Z';
     catch ME
         ME.message
         etopo1load;
-        [Z, ~] = etopo('./Output');
+        [Z, ~] = etopo('../Output');
         Z = Z';
     end
 end
@@ -83,3 +83,4 @@ is(~indices) =  (p3(~indices,1) < outer) .* (r_interpolated_upper < p3(~indices,
 % is(~indices) =  (p3(~indices,1) > inner) .* (r_interpolated_upper > p3(~indices,1));
 
 is=logical(is);
+cd(s_old)

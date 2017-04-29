@@ -19,7 +19,7 @@ oct = 2^dim;
 delta = 1/(256* N * maxNodesPerBox^(1/dim));
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
 r1 = sqrt(2);
-r2 = (sqrt(5)+1)/(sqrt(2));
+r2 = (sqrt(5)-1)/(sqrt(2));
 threshold = .7;                 % domain choice threshold (used for strictly positive density)
 adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;

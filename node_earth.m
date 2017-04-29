@@ -20,7 +20,7 @@ oct = 2^dim;
 delta = 1/(256* N * max_nodes_per_box^(1/dim));
 cubeShrink = 1 - max_nodes_per_box^(-1/dim)/64;
 r1 = sqrt(2);
-r2 = (sqrt(5)+1)/(sqrt(2));
+r2 = (sqrt(5)-1)/(sqrt(2));
 adjacency = 3^dim;              % the number of nearest boxes to consider
 
 
