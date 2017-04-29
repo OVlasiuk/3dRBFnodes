@@ -172,5 +172,7 @@ toc
 figure(2);
 h2 = histogram(D(:,2),bins);
 h2.FaceColor = [0.9 0 0];       % red
+ylabel('Number of nodes');
+xlabel('Distance to the nearest neighbor');
 % saveas(h2,'./Output/histogram.png');
 hold off;
