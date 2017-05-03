@@ -1,7 +1,8 @@
-% % % % % % % % % MAIN SCRIPT FOR NODE SETTING: PARALLEL CPUS % % % % % % %
+%NODE_DIS
+% Distributes nodes with the variable density (locally defining the
+% distance to the nearest neighbor) given by the handle densityF.
 
-% TODO: dimension-agnostic code
-
+% % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
 N = 50;                         % number of boxes per side of the cube
@@ -11,7 +12,7 @@ densityF = @density;            %     put the handle to your density function he
 kValue = 20;                    % number of nearest neighbors used in the repel.m
 A = 6;                          % The outer cube sidelength; all will be 
                                 %  contained in [-A/2, A/2]^3. 
-jitter = 0;
+jitter = 0;                     % The amount of jitter to add to the repel procedure.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;                 
@@ -25,7 +26,7 @@ adjacency = 3^dim;              % the number of nearest boxes to consider
 close all;
 
 s = char(mfilename('fullpath'));
-cd(s(1:end-12))                         % cd to the mfile folder; 
+cd(s(1:end-8))                         % cd to the mfile folder; 
                                         % The constant 12 depends on the
                                         % length of the filename.
 addpath helpers/                                        

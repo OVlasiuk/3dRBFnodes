@@ -100,6 +100,7 @@ clf;
 figure(2);
 h1=histogram(D(:,2),bins);
 h1.FaceColor = [0 0 0.9];        % blue
+h1.EdgeAlpha=.1;
 hold on;
 % D_old = D;       % uncomment this line to compare distribution/invoke plot3 below 
 
@@ -132,7 +133,7 @@ for iter=1:repel_steps
 % % % %   Riesz gradient for this node configuration 
     normals = directions./sqrt(sum(directions.*directions,1));
     cnf_tentative = cnf + normals.*step/offset/iter;
-    domain_check = ~sum(cnf_tentative<-A/2.0 + cnf_tentative>A/2.0,1) &...
+    domain_check = ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1) &...
          in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
     cnf(:,domain_check) = cnf_tentative(:,domain_check); 
 end
@@ -172,7 +173,9 @@ toc
 figure(2);
 h2 = histogram(D(:,2),bins);
 h2.FaceColor = [0.9 0 0];       % red
-ylabel('Number of nodes');
-xlabel('Distance to the nearest neighbor');
+h2.EdgeAlpha=.1;
+set(gca,'FontSize',12)
+ylabel('Number of nodes','FontSize',24);
+xlabel('Distance to the nearest neighbor','FontSize',24);
 % saveas(h2,'./Output/histogram.png');
 hold off;
