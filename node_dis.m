@@ -5,12 +5,12 @@
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
-N = 50;                         % number of boxes per side of the cube
+N = 100;                         % number of boxes per side of the cube
 maxNodesPerBox = 40;  
 repelSteps = 20;                % the number of iterations of the repel.m routine
 densityF = @density;            %     put the handle to your density function here
 kValue = 20;                    % number of nearest neighbors used in the repel.m
-A = 6;                          % The outer cube sidelength; all will be 
+A = 12;                          % The outer cube sidelength; all will be 
                                 %  contained in [-A/2, A/2]^3. 
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -57,7 +57,7 @@ cubeVectors = zeros(dim, oct);
 for i=1:dim
     len = 2 ^ (dim-i);
     for j=0:2^i-1                       
-        cubeVectors(i, j*len+1:(j+1)*len) =  mod(j,2)/N;
+        cubeVectors(i, j*len+1:(j+1)*len) =  A*mod(j,2)/N;
     end
 end
            
@@ -75,8 +75,8 @@ cornerIndices = true(1,size(corners,2));  %logical(sum(corners_bool(IDX),2));
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 cornersUsed = corners(:,cornerIndices);
-cornersDensity = densityF(cornersUsed);
-cornersAveragedDensity = mean(cornersDensity(IDX'),1);        
+Density = densityF(reshape(bsxfun(@plus,cubeVectors(:),repmat(cornersUsed,oct,1) ),dim,[]));
+cornersAveragedDensity = mean(reshape(Density,oct,[]),1);        
 cornersRadii = cornersAveragedDensity;
 currentNumNodes = num_radius(cornersRadii*N/A);
 % % % Note that the maximum number of nodes is capped in the following
@@ -131,12 +131,31 @@ cnf = repel(cnf,kValue,repelSteps,A,0,densityF,jitter,repelPower,0);
 
 %% Plot the results
 pbaspect([1 1 1])
-% view([1 1 0])
-F = figure(1);
-msize = ceil(max(1, 22-3.8*log10(size(cnf,2)) ));
+figure(1);
+msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
+xlabel('x')
+ylabel('y')
+zlabel('z')
+set(gca,'FontSize',12)
+az = -101.5;
+el = 30;
+view(az,el);
+grid on;
 axis vis3d
 
-% savefig(F,'./Output/nodes','compact')
-% save('slanttrui.mat', 'cnf')
-% dlmwrite('./Output/cnf.txt',cnf','delimiter','\t'); % ,'precision',3
+figure(3);
+[~, D] = knnsearch(cnf', cnf', 'k', 2);
+rdens_cnf = D(:,2);
+rdens_fun = densityF(cnf);
+ratio = rdens_fun./rdens_cnf';
+plot(ratio);
+set(gca,'FontSize',12)
+xlabel('Node {\bf\it{N}}','FontSize',24);
+ylabel('d({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
+minratio = min(ratio)
+maxratio = max(ratio)
+meanratio = mean(ratio)
+varratio = var(ratio)
+
+% dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
