@@ -1,13 +1,12 @@
 function num = num_radius(r)
 %NUM_RADIUS 
 % num = num_radius(r)
-% Returns the number of nodes in 3-dimensional unit cube, drawn from the
-% irrational lattice with parameters (sqrt(2), sqrt(5)), such that the
-% minimal separation of nodes between 27 such stacked cubes is
-% approximately r (multiple copies are to account for distances between 
-% neighboring cubes).
+% Returns the number of nodes in 3-dimensional unit cube, drawn from an
+% irrational lattice, such that the minimal separation of nodes between 27
+% such stacked cubes is approximately r (multiple copies are to account for
+% distances between neighboring cubes).
 % For specifics of how the nodes are picked from the lattice, and for the
-% scaling/shift we apply in each cube, see for example par_node.
+% scaling/shift we apply in each cube see also LATTICE_BY_COUNT, NODE_DIS.
 
 
 persistent rtable;
