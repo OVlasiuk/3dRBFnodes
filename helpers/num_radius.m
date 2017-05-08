@@ -11,7 +11,7 @@ function num = num_radius(r)
 
 persistent rtable;
 if isempty(rtable)
-    load('./Output/unit_lattice_radius.mat');    
+    load('../Output/unit_lattice_radius.mat');    
 end
 M = max(rtable);
 m = min(rtable);
