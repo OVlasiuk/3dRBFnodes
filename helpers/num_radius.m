@@ -7,7 +7,9 @@ function num = num_radius(r)
 % distances between neighboring cubes).
 % For specifics of how the nodes are picked from the lattice, and for the
 % scaling/shift we apply in each cube see also LATTICE_BY_COUNT, NODE_DIS.
-
+s_old = pwd;
+s = char(mfilename('fullpath'));
+cd(s(1:end-10))
 
 persistent rtable;
 if isempty(rtable)
@@ -18,3 +20,4 @@ m = min(rtable);
 num = interp1(rtable,1:numel(rtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
 num = round(num.*(r<1.0));
+cd(s_old)
