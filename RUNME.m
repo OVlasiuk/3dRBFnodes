@@ -11,7 +11,7 @@ s = char(mfilename('fullpath'));
 cd(s(1:end-5))
 addpath helpers/
 
-fprintf('The following node distribution examples are available:\n');
+fprintf('  The following node distribution examples are available:\n');
 D = dir('*.m');
 names = cell(size(D));
 for i=1:numel(D)
@@ -24,20 +24,20 @@ for i=1:numel(idx)
     fprintf('%d     %s\n', i, names{idx(i)});
     I{i} = num2str( i );
 end
-fprintf('\nMost of them will accept some input values, e.g., radial density,\n')
+fprintf('\n Most of them will accept some input values, e.g., radial density,\n')
 fprintf('point inclusion function, etc.\n')
-fprintf('Type "help name_of_the_example" while in Matlab prompt to see details\n'); 
+fprintf('  Type "help name_of_the_example" while in Matlab prompt to see details\n'); 
 fprintf('and possible input values. Alternatively, type the number of a \n')
 fprintf('script you''d like to run now with the default parameters, or press\n');
 fprintf('Return to go back to Matlab prompt. Type "A" to list all m-files\n');
-fprintf('in the current project. For most of these, typing "help name_of_the_file\n');
+fprintf('in the current project. For most of these, typing "help name_of_the_file"\n');
 inp=input('will produce some additional info.\n','s');
 if isempty(I)
 	d(s_old)
     return
 else
     switch inp
-        case 'A'
+        case {'a','A'}
             dir *.m;
             dir helpers*/*.m;
         case I

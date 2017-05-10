@@ -6,7 +6,8 @@ function num = num_radius(r)
 % such stacked cubes is approximately r (multiple copies are to account for
 % distances between neighboring cubes).
 % For specifics of how the nodes are picked from the lattice, and for the
-% scaling/shift we apply in each cube see also LATTICE_BY_COUNT, NODE_DIS.
+% scaling/shift we apply in each cube.
+%   See also LATTICE_BY_COUNT, NODE_DIS.
 s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))
