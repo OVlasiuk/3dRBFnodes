@@ -1,5 +1,6 @@
-function node_dis(densityF,in_domainF)
+function cnf = node_dis(densityF,in_domainF)
 %NODE_DIS
+% cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
 % distance to the nearest neighbor) given by the handle densityF.
 % densityF -- handle to the density function, accepts an array of size 

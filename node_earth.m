@@ -1,8 +1,13 @@
-function node_earth(densityF,in_domainF)
+function cnf = node_earth(densityF,in_domainF)
 %NODE_EARTH
+% cnf = node_earth(densityF,in_domainF)
 % Places a uniform distribution in a thin layer about the Earth surface,
 % using the ETOPO1 data and the same irrational-lattices-based approach as
-% node_dis
+% node_dis 
+% Output:
+% cnf -- 3x(#of points)-sized matrix containing point coordinates;
+%   Additionally produces 
+% Input:
 % densityF -- handle to the density function, accepts an array of size 
 %   (dim)x(#of points); (currently only dim=3);
 % in_domainF -- handle to the point inclusion function, accepts three arrays
