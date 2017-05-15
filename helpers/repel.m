@@ -40,7 +40,6 @@ function cnf = repel(cnf,...
 % outfile -- the log is printed to this file. Pass 0 to only print to
 %   console;
 
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 dim = size(cnf,1);
 pt_num = size(cnf,2);   
@@ -73,30 +72,26 @@ if ~exist('in_domainF', 'var') || ~isa(in_domainF,'function_handle')
      in_domainF = @(x,y,z) ones(size(x));
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-tic
 [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
 step = min(D(:,2));
-% cutoff = (k_value*step)^2;
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 if outfile ~= 0
-    fprintf( outfile, 'Minimal separation before repel steps:      %f\n', step);
+    fprintf( outfile, 'Minimal separation before repel steps:      %3.8f\n', step);
 end    
-fprintf( 'Minimal separation before repel steps:      %f\n', step)
+fprintf( 'Minimal separation before repel steps:      %3.8f\n', step)
 
 outtemp = mean(D(:,2));
 if outfile ~=0
-    fprintf( outfile, 'Mean separation before repel steps:      %f\n\n',   outtemp);
+    fprintf( outfile, 'Mean separation before repel steps:      %3.8f\n\n',   outtemp);
 end
-fprintf(   'Mean separation before repel steps:      %f\n\n',   outtemp)
+fprintf(   'Mean separation before repel steps:      %3.8f\n\n',   outtemp)
 toc
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% %  histogram
 
 fprintf('\n')
-clf;
-clf;
 figure(2);
 h1=histogram(D(:,2),bins);
 h1.FaceColor = [0 0 0.9];        % blue
@@ -142,14 +137,14 @@ end
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   
 outtemp = min(D(:,2));
 if outfile ~=0
-    fprintf( outfile, 'Minimal separation after:      %f\n',  outtemp );
+    fprintf( outfile, 'Minimal separation after:      %3.8f\n',  outtemp );
 end
-fprintf(   'Minimal separation after:      %f\n',  outtemp );
+fprintf(   'Minimal separation after:      %3.8f\n',  outtemp );
 outtemp =  mean(D(:,2));
 if outfile ~=0
-    fprintf( outfile, 'Mean separation after:      %f\n',  outtemp);
+    fprintf( outfile, 'Mean separation after:      %3.8f\n',  outtemp);
 end
-fprintf( 'Mean separation after:      %f\n',  outtemp)
+fprintf( 'Mean separation after:      %3.8f\n',  outtemp)
 toc
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -163,7 +158,7 @@ toc
 % CG=cnf(:,D_old(:,2)<D(:,2));
 % CB=cnf(:,D_old(:,2)>D(:,2));
 % CE=cnf(:,D_old(:,2)==D(:,2));
-% fprintf(   'The number of nodes that have improved separation is:      %f\n',  sum(D_old(:,2)<D(:,2)) );
+% fprintf(   'The number of nodes that have improved separation is:      %3.8f\n',  sum(D_old(:,2)<D(:,2)) );
 % plot3(CG(1,:), CG(2,:), CG(3,:),  '.g','MarkerSize',1);
 % plot3(CB(1,:), CB(2,:), CB(3,:),  '.r','MarkerSize',1);
 % plot3(CE(1,:), CE(2,:), CE(3,:),  '.k','MarkerSize',1);

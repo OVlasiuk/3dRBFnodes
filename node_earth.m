@@ -22,15 +22,12 @@ function cnf = node_earth(densityF,in_domainF)
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 N = 80;                         % number of boxes per side of the cube
 maxNodesPerBox = 20;          % 
-repel_steps = 30;               % the number of iterations of the repel.m routine
-k_value = 30;                   % number of nearest neighbors used in the repel.m
 A = 2.4;                        % the bigger cube side length
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;
-bins = 100;
 oct = 2^dim;
-delta = 1/(256* maxNodesPerBox^(1/dim));
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
+delta = (1-cubeShrink)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
@@ -128,7 +125,7 @@ fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps,
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf, k_value, repel_steps, A, in_domainF, densityF, 0, repelPower, 0);
+cnf = repel(cnf, kValue, repelSteps, A, in_domainF, densityF, 0, repelPower, 0);
  
 %% Plot the results
 pbaspect([1 1 1])
