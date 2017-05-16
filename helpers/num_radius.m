@@ -16,9 +16,7 @@ persistent rtable;
 if isempty(rtable)
     load('../Output/unit_lattice_radius.mat');    
 end
-M = max(rtable);
-m = min(rtable);
 num = interp1(rtable,1:numel(rtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
-num = round(num.*(r<1.0));
+num = round(num.*(r<=1.0));
 cd(s_old)

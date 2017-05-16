@@ -78,11 +78,9 @@ end
 %% Populate a sample voxel
 % This example uses uniform distribution, so we may just as well
 % preallocate one voxel and reuse it for all corners.
-voxel = zeros(dim, maxNodesPerBox);
-for j=1:maxNodesPerBox
-    voxel(:,j) = A*cubeShrink * [j/maxNodesPerBox;  mod(r1*j,1);  mod(r2*j,1)]/N;       
-    voxel(:,j) = voxel(:,j) +  A*delta/N;
-end    
+j = 1:maxNodesPerBox;
+    voxel = A*cubeShrink * [j/maxNodesPerBox;  mod(r1*j,1);  mod(r2*j,1)]/N;       
+    voxel = voxel +  A*delta/N;
 
 
 %% Main                                               
