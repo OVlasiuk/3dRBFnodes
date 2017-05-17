@@ -7,7 +7,6 @@ function rtable = lattice_by_count(COUNT,CUBE_SHRINK, R1, R2, SAVE)
 % separation distances. The lattices are placed in 27=3^3 adjacent boxes.
 % 
 % COUNT -- the maximal number of nodes in a single box to be considered;
-% DELTA -- nodes inside each box will be translated by this value;
 % CUBE_SHRINK -- nodes inside each box will be scaled by this factor; must
 % be < 1.
 % R1, R2 -- parameters of the lattice; must be linearly independent over
