@@ -13,7 +13,7 @@ delta = 1/(128* maxNodesPerBox^(1/dim));
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
 num = 500;
 extent = 200;
-l = @(r1,r2) lattice_by_count(num,delta,cubeShrink,r1,r2,'n');
+l = @(r1,r2) lattice_by_count(num,cubeShrink,r1,r2,'n');
 ratios = [
     sqrt(2)             (sqrt(5)-1)/(sqrt(2));
     sqrt(3)             sqrt(5);

@@ -1,6 +1,6 @@
-function rtable = lattice_by_count(COUNT, DELTA, CUBE_SHRINK, R1, R2, SAVE)
+function rtable = lattice_by_count(COUNT,CUBE_SHRINK, R1, R2, SAVE)
 %LATTICE_BY_COUNT 
-% rtable = lattice_by_count(COUNT, DELTA, CUBE_SHRINK, R1, R2, SAVE)
+% rtable = lattice_by_count(COUNT, CUBE_SHRINK, R1, R2, SAVE)
 % Given the maximal number of nodes COUNT, the centering term and the box
 % shrinking factor, construct irrational lattices with N nodes and
 % parameters R1, R2 for each N=1:COUNT, and determine the
@@ -13,7 +13,7 @@ function rtable = lattice_by_count(COUNT, DELTA, CUBE_SHRINK, R1, R2, SAVE)
 % R1, R2 -- parameters of the lattice; must be linearly independent over
 % the rationals;
 % SAVE -- one of 'y', 'n'.
-
+DELTA = (1 - CUBE_SHRINK)/2;
 rtable = zeros(1,COUNT);
 
 N = 3;

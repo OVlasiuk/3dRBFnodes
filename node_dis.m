@@ -16,7 +16,7 @@ function cnf = node_dis(densityF,in_domainF)
 
 
 N = 100;                         % number of boxes per side of the cube
-maxNodesPerBox = 40;
+maxNodesPerBox = 80;
 A = 12;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
@@ -42,9 +42,8 @@ if ~exist('densityF','var')
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
-    load('./Output/unit_lattice_radius.mat','DELTA', 'CUBE_SHRINK','R1', 'R2')
-    if (delta ~= DELTA)...
-            || (cubeShrink ~= CUBE_SHRINK)...
+    load('./Output/unit_lattice_radius.mat')
+    if (cubeShrink ~= CUBE_SHRINK)...
             || (r1 ~= R1)...
             || (r2 ~= R2)
         throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
@@ -54,7 +53,7 @@ catch
     fprintf('nodes is missing or not up to date... Hang on there, I''ll make\n'); 
     fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
     fprintf('do it once.\n');
-    lattice_by_count(2*maxNodesPerBox,delta,cubeShrink,r1,r2,'y');
+    lattice_by_count(maxNodesPerBox,cubeShrink,r1,r2,'y');
     fprintf('...\nDone.\n\n')
 end
 

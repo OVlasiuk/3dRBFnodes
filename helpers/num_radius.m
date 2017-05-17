@@ -1,4 +1,4 @@
-function num = num_radius(r)
+function  num = num_radius(r)
 %NUM_RADIUS 
 % num = num_radius(r)
 % Returns the number of nodes in 3-dimensional unit cube, drawn from an
@@ -19,4 +19,7 @@ end
 num = interp1(rtable,1:numel(rtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
 num = round(num.*(r<=1.0));
+num(r<rtable(end)) = size(rtable,2);
+
+% ind = INDEX(uint16(max(num,1)));
 cd(s_old)
