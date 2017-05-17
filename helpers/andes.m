@@ -139,6 +139,7 @@ figure(6);
 subplot(1,2,1)
 hold on;
 boxplot(Dsurf) % ,'PlotStyle','compact'
+figure(6)
 plot(max(Dsurf,[],1));
 plot(min(Dsurf,[],1));
 leg = legend('Maximal distances for the surface node set','Minimal distances for the surface node set');
@@ -146,10 +147,11 @@ leg.FontSize = 16;
 leg.Location = 'northwest';
 xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
-% 
+%
+figure(6)
 subplot(1,2,2)
 boxplot(Dcnf)
-hold on;
+hold on
 plot(max(Dcnf,[],1));
 plot(min(Dcnf,[],1));
 leg = legend('Maximal distances for the whole node set','Minimal distances for the whole node set');

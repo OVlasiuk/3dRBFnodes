@@ -21,7 +21,7 @@ function cnf = node_earth(densityF,in_domainF)
 % % % % % % % % % MAIN SCRIPT FOR NODES IN GEO-SETTING % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 N = 80;                         % number of boxes per side of the cube
-maxNodesPerBox = 40;          % 
+maxNodesPerBox = 20;          % 
 A = 2.4;                        % the bigger cube side length
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 5;
