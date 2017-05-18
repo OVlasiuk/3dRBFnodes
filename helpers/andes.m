@@ -18,7 +18,7 @@ cnf = node_earth;
 format long;
 bins = 200;
 binwidth = .0002;
-adjacency = 7;
+adjacency = 13;
     colors = [[138,186,195]
     [86,54,41]
     [169,191,160]
@@ -121,7 +121,7 @@ hh.LineWidth=1.5;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
 ylabel('Number of nodes','FontSize',24);
-xlabel('Distances to the nearest neighbors','FontSize',24);
+xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
 separation_surface = min(Dsurf(:,2))
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -144,7 +144,7 @@ plot(max(Dsurf,[],1));
 plot(min(Dsurf,[],1));
 leg = legend('Maximal distances for the surface node set','Minimal distances for the surface node set');
 leg.FontSize = 16;
-leg.Location = 'northwest';
+leg.Location = 'southeast';
 xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
 %
@@ -156,11 +156,12 @@ plot(max(Dcnf,[],1));
 plot(min(Dcnf,[],1));
 leg = legend('Maximal distances for the whole node set','Minimal distances for the whole node set');
 leg.FontSize = 16;
-leg.Location = 'northwest';
+leg.Location = 'southeast';
 xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
-figure(6);
-title('Distances to nearest neighbors')
+figure(6)
+set(gca,'FontSize',12)
+
 
 % % % % % % % % % % % % % % % PLOTTING THE ANDES % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
