@@ -1,5 +1,5 @@
-function cnf = node_dis(densityF,in_domainF)
-%NODE_DIS
+function cnf = node_shell(cnf_bdry, densityF,in_domainF)
+%NODE_SHELL
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
 % distance to the nearest neighbor) given by the handle densityF.
@@ -13,14 +13,11 @@ function cnf = node_dis(densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-
-
-N = 100;                         % number of boxes per side of the cube
+N = 50;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
-A = 12;                          
+A = 14;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
-dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
-repelPower = 5;                 
+dim = 3;                        
 oct = 2^dim;
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
 delta = (1-cubeShrink)/2;
@@ -30,7 +27,7 @@ adjacency = (dim+1)*2^dim;              % the number of nearest boxes to conside
 
 close all;
 s = char(mfilename('fullpath'));
-cd(s(1:end-8))                         % cd to the mfile folder; 
+cd(s(1:end-10))                         % cd to the mfile folder; 
                                         % The constant 12 depends on the
                                         % length of the filename.
 addpath helpers/                                        
@@ -38,7 +35,11 @@ if ~exist('Output','dir')
     mkdir Output;
 end
 if ~exist('densityF','var')
-    densityF=@density;
+    densityF=@density_shell_uni;
+end
+if ~exist('in_domainF','var')
+    in_domainF = @(x,y,z) in_shell(x,y,z,1+density_shell_uni(1),6.1062-density_shell_uni(6.1062));
+%     in_domainF = @(x,y,z) in_shell(x,y,z,1,6.1062);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
@@ -56,8 +57,8 @@ catch
     lattice_by_count(maxNodesPerBox,cubeShrink,r1,r2,'y');
     fprintf('...\nDone.\n\n')
 end
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Populate vertices of the unit cube 
 cubeVectors = zeros(dim, oct);                                                                
 for i=1:dim
@@ -81,10 +82,13 @@ else
 end
 
 Density = densityF(reshape(bsxfun(@plus,cubeVectors(:),repmat(cornersUsed,oct,1) ),dim,[]));
-cornersAveragedDensity = mean(reshape(Density,oct,[]),1);        
+cornersAveragedDensity = mean(reshape(Density,oct,[]),1); 
+
+
 currentNumNodes = num_radius(cornersAveragedDensity*N/A);
 % % % Note that the maximum number of nodes is capped in the following
 % line: not doing it can cause MANY nodes in MANY boxes.
+% CAN BE REMOVED in this version, see definition of rtable above
 currentNumNodes = min([currentNumNodes; maxNodesPerBox*ones(1,numel(currentNumNodes))],[],1);
 nodes = zeros(dim,sum(currentNumNodes));
 previousNodes = [0 cumsum(currentNumNodes)];
@@ -92,18 +96,18 @@ previousNodes = [0 cumsum(currentNumNodes)];
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
     box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
-    box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);   
+    box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
 toc
 
 %% Remove nodes outside the density support
-if ~exist('in_domainF','var')
+if ~exist('in_domainF','var') || ~isa(in_domainF,'function_handle')
     cnf = nodes;
 else
-    f_vals = in_domainF(nodes(1,:), nodes(2,:), nodes(3,:));            
+    in_check = in_domainF(nodes(1,:), nodes(2,:), nodes(3,:));            
     % values of the density function
-    cnf = nodes(:, f_vals);                                                      
+    cnf = nodes(:, in_check);                                                      
     % after removing nodes with zero density
 end
 
@@ -118,12 +122,16 @@ fprintf('\n');
  
 %% Repel and save nodes
 kValue =  ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = ceil(max(.9*log10( size(cnf,2) ).^2-5,10));
+repelSteps = 20;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf,size(cnf,2),kValue,repelSteps,A,in_domainF,densityF,jitter,repelPower,0);
+if ~exist('cnf_bdry','var')
+    cnf_bdry = [];
+end
+cnf = [cnf cnf_bdry];
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,A,in_domainF,densityF,jitter);
 
 %% Plot the results
 pbaspect([1 1 1])
@@ -151,6 +159,8 @@ xlabel('Node {\bf\it{N}}','FontSize',24);
 ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
 minratio = min(ratio)
 maxratio = max(ratio)
+quantile25 = quantile(ratio,0.25)
+quantile75 = quantile(ratio,0.75)
 meanratio = mean(ratio)
 varratio = var(ratio)
 

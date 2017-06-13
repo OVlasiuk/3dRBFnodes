@@ -1,4 +1,4 @@
-%ANDES
+    %ANDES
 % Extracts and plots a piece of South-American coast next to the Andes,
 % using the output of node_earth.m
 % Also, computes and displays some statistics about the distribution of

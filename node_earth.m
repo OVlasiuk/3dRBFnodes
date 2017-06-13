@@ -122,7 +122,7 @@ fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps,
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf, kValue, repelSteps, A, in_domainF, densityF, 0, repelPower, 0);
+cnf = repel(cnf, size(cnf,2), kValue, repelSteps, A, in_domainF, densityF, 0, repelPower, 0);
  
 %% Plot the results
 pbaspect([1 1 1])
