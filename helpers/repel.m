@@ -48,7 +48,7 @@ function cnf = repel(cnf,...
 dim = size(cnf,1);
 pt_num = size(cnf,2);   
 bins = 200;
-offset = 3;         % divides the minimal separation in the main loop
+offset = 20;         % divides the minimal separation in the main loop
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if ~exist('s', 'var')
     s = 5.0;
@@ -78,16 +78,16 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 [IDX, D] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
 IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
-step = min(D(:,2));
+step = D(:,2);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 fprintf( '\nEntering the repel.m subroutine; a timer starts.\n\n')
 tic
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if outfile ~= 0
-    fprintf( outfile, 'Minimal separation before repel steps:      %3.8f\n', step);
+    fprintf( outfile, 'Minimal separation before repel steps:      %3.8f\n', min(step));
 end    
-fprintf( 'Minimal separation before repel steps:      %3.8f\n', step)
+fprintf( 'Minimal separation before repel steps:      %3.8f\n', min(step))
 outtemp = mean(D(:,2));
 if outfile ~=0
     fprintf( outfile, 'Mean separation before repel steps:      %3.8f\n\n',   outtemp);
@@ -121,9 +121,9 @@ for iter=1:repel_steps
         gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
     directions = gradient./sqrt(sum(gradient.*gradient,1));
-%     step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
+    step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
-                        directions(:,1:N_moving).*step/(offset+iter-1);  
+                        directions(:,1:N_moving).*step(1:N_moving)/(offset+iter-1);  
     domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
 % %                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
     if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')

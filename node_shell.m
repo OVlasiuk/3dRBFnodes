@@ -13,13 +13,13 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 140;                         % number of boxes per side of the cube
+N = 50;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
 A = 14;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
+cubeShrink = 1 - maxNodesPerBox^(-1/dim);
 delta = (1-cubeShrink)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
@@ -38,7 +38,7 @@ if ~exist('densityF','var')
     densityF=@density_shell_uni;
 end
 if ~exist('in_domainF','var')
-    in_domainF = @(x,y,z) in_shell(x,y,z,1+density_shell_uni(1),6.1062-density_shell_uni(6.1062));
+    in_domainF = @(x,y,z) in_shell(x,y,z,1+density_shell_uni(1)/4,6.4046-density_shell_uni(6.4046)/4);
 %     in_domainF = @(x,y,z) in_shell(x,y,z,1,6.1062);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -82,21 +82,39 @@ else
 end
 
 Density = densityF(reshape(bsxfun(@plus,cubeVectors(:),repmat(cornersUsed,oct,1) ),dim,[]));
-cornersAveragedDensity = mean(reshape(Density,oct,[]),1); 
-
-
+cornersAveragedDensity = mean(reshape(Density,oct,[]),1);
 currentNumNodes = num_radius(cornersAveragedDensity*N/A);
-% % % Note that the maximum number of nodes is capped in the following
-% line: not doing it can cause MANY nodes in MANY boxes.
-% CAN BE REMOVED in this version, see definition of rtable above
-currentNumNodes = min([currentNumNodes; maxNodesPerBox*ones(1,numel(currentNumNodes))],[],1);
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+%% Put centers into empty boxes
+centersEmpty = cornersUsed(:, ~currentNumNodes) + A/2/N;
+centersDensity = densityF(centersEmpty);
+[sortedEmptyDensity, sortEmpty] = sort(centersDensity);
+sortedCentersEmpty = centersEmpty(:,sortEmpty);
+centersEmptyFill = false(1,size(centersEmpty,2));
+
+% [eIDX, eD] = knnsearch(sortedCentersEmpty',sortedCentersEmpty','k',100);
+
+for emptyIndex=1:size(sortedCentersEmpty, 2)
+    distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
+        sortedCentersEmpty(:,centersEmptyFill) );
+    if isempty(distMatrix) ||...
+        (min( sqrt(sum(distMatrix.*distMatrix,1)) ) > sortedEmptyDensity(emptyIndex))
+        centersEmptyFill(emptyIndex) = true;
+    end
+end
+currentNumNodes(~currentNumNodes) = double(centersEmptyFill);
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Place irrational lattices everywhere
 nodes = zeros(dim,sum(currentNumNodes));
 previousNodes = [0 cumsum(currentNumNodes)];
     
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
-    box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
-    box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);    
+%     deltaI =  cornersAveragedDensity(i)/2;
+%     cubeShrinkI = 1-2*N*deltaI/A;
+    box = A * cubeShrink * [mod(.5+J/currentNumNodes(i),1);  mod(r1*J,1);  mod(r2*J,1)]/N;
+    box = bsxfun(@plus, cornersUsed(:,i)+ delta*A/N , box(randperm(dim),:));    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
 toc
@@ -114,12 +132,13 @@ end
 %% Node stats
 outtemp = length(cnf);
 fprintf( '\nNumber of nodes:      %d\n',  outtemp)
+fprintf( 'Boxes per side of the enclosing cube:      %d\n',  N)
 fprintf( 'Mean number of nodes per box:      %d\n', mean(currentNumNodes ))
 fprintf( 'Max number of nodes per box:      %d\n', max(currentNumNodes ))
 fprintf( 'Min number of nodes per box:      %d\n', min(currentNumNodes ))
 toc
 fprintf('\n');
- 
+
 %% Repel and save nodes
 kValue =  ceil(max(log10( size(cnf,2) ).^2-5,12));
 repelSteps = 20;
@@ -154,17 +173,35 @@ rdens_cnf = D(:,2);
 rdens_fun = densityF(cnf);
 ratio = rdens_fun./rdens_cnf';
 diff = abs(rdens_fun - rdens_cnf');
-plot(ratio);
+radii = sqrt( sum( cnf.*cnf,1 ) );
+
+plot(radii,ratio,'.k', 'MarkerSize',4)
 hold on;
-plot(diff)
+plot(radii,diff,'.g', 'MarkerSize',4)
 set(gca,'FontSize',12)
-xlabel('Node {\bf\it{N}}','FontSize',24);
+xlabel('Radius {\bf\it{N}}','FontSize',24);
 ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
-minratio = min(ratio)
-maxratio = max(ratio)
-quantile25 = quantile(ratio,0.25)
-quantile75 = quantile(ratio,0.75)
-meanratio = mean(ratio)
-varratio = var(ratio)
+
+%% Density recovery
+maxdiff = max(diff);
+meandiff = mean(diff);
+minratio = min(ratio);
+maxratio = max(ratio);
+quantile10 = quantile(ratio,0.1);
+quantile90 = quantile(ratio,0.9);
+meanratio = mean(ratio);
+varratio = var(ratio);
+fprintf('\nmaxdiff\t\tmeandiff\n');
+fprintf('%3.6f\t%3.6f\n',maxdiff,meandiff)
+fprintf('minratio\tmaxratio\tquantile10\tquantile90\n');
+fprintf('%3.6f\t%3.6f\t%3.6f\t%3.6f\t\n', minratio,maxratio,quantile10,quantile90)
+fprintf('meanratio\tvarratio\n')
+fprintf('%3.6f\t%3.6f\n',meanratio,varratio)
+figure(4)
+plot3(cnf(1,ratio>quantile90),cnf(2,ratio>quantile90),cnf(3,ratio>quantile90),'.k','MarkerSize',msize)
+hold on;
+plot3(cnf(1,ratio<quantile10),cnf(2,ratio<quantile10),cnf(3,ratio<quantile10),'.r','MarkerSize',msize)
+axis vis3d;
+% min_bad_radius = min(sqrt(sum(cnf(:,ratio>quantile75).^2,1)))
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

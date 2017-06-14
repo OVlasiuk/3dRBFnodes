@@ -162,4 +162,5 @@ maxratio = max(ratio)
 meanratio = mean(ratio)
 varratio = var(ratio)
 
+
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
