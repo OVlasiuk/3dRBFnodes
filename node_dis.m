@@ -24,6 +24,7 @@ repelPower = 5;
 oct = 2^dim;
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
 delta = (1-cubeShrink)/2;
+r0 = exp(1)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
@@ -91,7 +92,7 @@ previousNodes = [0 cumsum(currentNumNodes)];
     
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
-    box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
+    box = A * cubeShrink * [mod(r0*J,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
     box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);   
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
@@ -123,7 +124,7 @@ fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps,
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf,size(cnf,2),kValue,repelSteps,A,in_domainF,densityF,jitter,repelPower,0);
+cnf = repel(cnf,size(cnf,2),kValue,repelSteps,A,in_domainF,jitter,repelPower,0);
 
 %% Plot the results
 pbaspect([1 1 1])
@@ -145,10 +146,17 @@ figure(3);
 rdens_cnf = D(:,2);
 rdens_fun = densityF(cnf);
 ratio = rdens_fun./rdens_cnf';
+diff = abs(rdens_fun - rdens_cnf');
 plot(ratio);
+hold on;
+plot(diff)
+maxdiff = max(diff);
+meandiff = mean(diff);
+
 set(gca,'FontSize',12)
 xlabel('Node {\bf\it{N}}','FontSize',24);
 ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
+leg = legend('Ratio','Difference');
 minratio = min(ratio)
 maxratio = max(ratio)
 meanratio = mean(ratio)

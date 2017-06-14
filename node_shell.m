@@ -13,7 +13,7 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 50;                         % number of boxes per side of the cube
+N = 140;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
 A = 14;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
@@ -131,7 +131,7 @@ if ~exist('cnf_bdry','var')
     cnf_bdry = [];
 end
 cnf = [cnf cnf_bdry];
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,A,in_domainF,densityF,jitter);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,A,in_domainF,jitter);
 
 %% Plot the results
 pbaspect([1 1 1])
@@ -153,7 +153,10 @@ figure(3);
 rdens_cnf = D(:,2);
 rdens_fun = densityF(cnf);
 ratio = rdens_fun./rdens_cnf';
+diff = abs(rdens_fun - rdens_cnf');
 plot(ratio);
+hold on;
+plot(diff)
 set(gca,'FontSize',12)
 xlabel('Node {\bf\it{N}}','FontSize',24);
 ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);

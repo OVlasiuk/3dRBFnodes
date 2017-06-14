@@ -3,18 +3,19 @@ function cnf = repel(cnf,...
                     k_value,...
                     repel_steps,...
                     ~,...
-                    in_shell,...
-                    ~,...
+                    in_domainF,...
                     jitter,...
                     s,...
-                    outfile)
+                    outfile,...
+                    pullbackF...
+                )
 %REPEL 
 % cnf = repel(cnf,...
 %             N_moving,
 %             k_value,...
 %             repel_steps,...
 %             A,...
-%             in_shell,...
+%             in_domainF,...
 %             densityF,...
 %             jitter,...
 %             s,...
@@ -22,7 +23,7 @@ function cnf = repel(cnf,...
 % Tries to distribute the configuration cnf of size dim x N, repelling 
 % it in the direction of the Riesz gradient by a constant multiple of the 
 % distance to the nearest neighbor. Uses the domain checker function
-% in_shell.
+% in_domainF.
 % 
 % cnf -- dim x N matrix with the points;
 % N_moving -- move only the first N_moving points in cnf;
@@ -30,7 +31,7 @@ function cnf = repel(cnf,...
 % repel_steps -- iterations of the step process to be made;
 % A -- sidelength of the outer bounding cube: the repel process will be
 %   restricted to the cube [-A/2, A/2]^3.
-% in_shell -- domain checker; must take (x,y,z) as (arrays of) coordinates
+% in_domainF -- domain checker; must take (x,y,z) as (arrays of) coordinates
 %   and return a boolean array of answers "in domain/not in the domain" for 
 %   each point. Pass 0 or nothing to not perform any domain checks.
 % densityF -- determines radial distance to the nearest node;
@@ -71,14 +72,13 @@ end
 if ~exist('outfile', 'var')
     outfile = 0;
 end
-% if ~exist('in_shell', 'var') || ~isa(in_shell,'function_handle')
-%      in_shell = @in_shell;
-% end
+if ~exist('in_domainF', 'var') || ~isa(in_domainF,'function_handle')
+     in_domainF = @(x, y, z) ones(size(x));
+end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 [IDX, D] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
 IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
 step = min(D(:,2));
-c = cell(1,nargout(in_shell)-1);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 fprintf( '\nEntering the repel.m subroutine; a timer starts.\n\n')
@@ -121,21 +121,14 @@ for iter=1:repel_steps
         gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
     directions = gradient./sqrt(sum(gradient.*gradient,1));
+%     step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
-                        directions(:,1:N_moving).*step/offset/iter;
-%                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
-%     if numel(c) > 0
-%         [domain_check, c{:}] = in_shell(cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:), 1, 6.1062);
-%         switch numel(c)
-%             case 1
-%                 r = c{1};
-%                 cnf(:,~domain_check) = cnf(:,~domain_check)...
-%                     ./ sqrt(sum(cnf(:,~domain_check).*cnf(:,~domain_check),1))...
-%                     .* r(~domain_check);
-%         end
-%     else
-        domain_check = in_shell( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
-%     end
+                        directions(:,1:N_moving).*step/(offset+iter-1);  
+    domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
+% %                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
+    if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
+        cnf(:,~domain_check) = pullbackF(cnf_tentative(:,~domain_check)); 
+    end    
     cnf(:,domain_check) = cnf_tentative(:,domain_check); 
 end
 toc
