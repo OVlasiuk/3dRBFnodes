@@ -4,6 +4,7 @@ function cnf = repel(cnf,...
                     repel_steps,...
                     ~,...
                     in_domainF,...
+                    densityF,...
                     jitter,...
                     s,...
                     outfile,...
@@ -67,7 +68,7 @@ end
 if ~exist('jitter', 'var') || jitter==0
     noise = 0;
 else 
-    noise = @() jitter*normc(randn(dim,pt_num));
+    noise = @() jitter*normc(randn(dim,N_moving));
 end
 if ~exist('outfile', 'var')
     outfile = 0;
@@ -110,20 +111,23 @@ for iter=1:repel_steps
 %       vectors pointing from each node to its (quasi-) k_value nearest 
 %       neighbors
     knn_differences = cnf_repeated - cnf(:,IDX);
-    knn_norms_squared = sum(knn_differences.*knn_differences,1);               
-    riesz_weights = compute_weights(knn_norms_squared);     
-    gradient = bsxfun(@times,riesz_weights,knn_differences);
+    knn_norms_squared = sum(knn_differences.*knn_differences,1);
+    density_weights = 1./compute_weights(densityF(cnf(:,IDX)));  %Weight nearest neighbor to have locally uniform separation
+    riesz_weights = compute_weights(knn_norms_squared); 
+    weights = density_weights.*riesz_weights;
+    gradient = bsxfun(@times,weights,knn_differences);
     gradient = reshape(gradient, dim, k_value, []);
 % % % %   Riesz gradient for this node configuration 
     gradient = reshape(sum(gradient,2), dim, []);
 %     Add jitter:
     if isa(noise,'function_handle')
-        gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
+     gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
-    directions = gradient./sqrt(sum(gradient.*gradient,1));
-    step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
+    directions = gradient./sqrt(sum(gradient.*gradient,1)); 
+      step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
-                        directions(:,1:N_moving).*step(1:N_moving)/(offset+iter-1);  
+                        directions(:,1:N_moving).*step/(offset+iter-1); 
+                    
     domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
 % %                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
     if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
@@ -155,5 +159,5 @@ h2.EdgeAlpha=.1;
 set(gca,'FontSize',12)
 ylabel('Number of nodes','FontSize',16);
 xlabel('Distance to the nearest neighbor','FontSize',16);
-% saveas(h2,'./Output/histogram.png');
+ saveas(h2,'./Output/histogram.png');
 hold off;
