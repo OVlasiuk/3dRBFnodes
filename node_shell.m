@@ -13,23 +13,34 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 50;                         % number of boxes per side of the cube
+N = 100;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
-A = 14;                          
+A = 8;          
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% Specific to the atmodeling problems:
+a = 6371220;
+ztop = 12000;
+Ns = 12100;
+Nr = 30;
+ksep = @(Ns) sqrt(8*pi /Ns/sqrt(3)) ;
+rcap = @(r) a * exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
+rcapRad = rcap(a+ztop) / rcap(a);
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
-cubeShrink = 1 - maxNodesPerBox^(-1/dim);
+cubeShrink = 1 - maxNodesPerBox^(-1/dim)*.8;
 delta = (1-cubeShrink)/2;
-r1 = sqrt(2);
-r2 = (sqrt(5)-1)/(sqrt(2));
+r1 = 6*pi;
+r2 = exp(1)/2;
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
-
 close all;
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))                         % cd to the mfile folder; 
-                                        % The constant 12 depends on the
-                                        % length of the filename.
+% The constant depends on the
+% length of the filename.
 addpath helpers/                                        
 if ~exist('Output','dir')
     mkdir Output;
@@ -38,8 +49,7 @@ if ~exist('densityF','var')
     densityF=@density_shell_uni;
 end
 if ~exist('in_domainF','var')
-    in_domainF = @(x,y,z) in_shell(x,y,z,1+density_shell_uni(1)/4,6.4046-density_shell_uni(6.4046)/4);
-%     in_domainF = @(x,y,z) in_shell(x,y,z,1,6.1062);
+    in_domainF = @(x,y,z) in_shell(x,y,z,1+.001,rcapRad - .001);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
@@ -58,6 +68,7 @@ catch
     fprintf('...\nDone.\n\n')
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% MAIN
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Populate vertices of the unit cube 
 cubeVectors = zeros(dim, oct);                                                                
@@ -68,7 +79,7 @@ for i=1:dim
     end
 end         
 
-%% Main                                               
+%% Select corners in the support                                              
 tic
 I=1:N^dim;
 corners = A*[rem((I-1), N);  floor(rem(I-1, N^2)/N);  floor((I-1)/N^2)]/N-A/2.0;
@@ -84,27 +95,59 @@ end
 Density = densityF(reshape(bsxfun(@plus,cubeVectors(:),repmat(cornersUsed,oct,1) ),dim,[]));
 cornersAveragedDensity = mean(reshape(Density,oct,[]),1);
 currentNumNodes = num_radius(cornersAveragedDensity*N/A);
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-%% Put centers into empty boxes
+%% Place centers into empty boxes
 centersEmpty = cornersUsed(:, ~currentNumNodes) + A/2/N;
-centersDensity = densityF(centersEmpty);
-[sortedEmptyDensity, sortEmpty] = sort(centersDensity);
+centersEmptyDensity = densityF(centersEmpty);
+[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity);
+
 sortedCentersEmpty = centersEmpty(:,sortEmpty);
-centersEmptyFill = false(1,size(centersEmpty,2));
 
-% [eIDX, eD] = knnsearch(sortedCentersEmpty',sortedCentersEmpty','k',100);
+centersEmptyFill = false(1,size(sortedCentersEmpty,2));
 
-for emptyIndex=1:size(sortedCentersEmpty, 2)
-    distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
-        sortedCentersEmpty(:,centersEmptyFill) );
-    if isempty(distMatrix) ||...
-        (min( sqrt(sum(distMatrix.*distMatrix,1)) ) > sortedEmptyDensity(emptyIndex))
+I = 1:size(sortedCentersEmpty, 2);
+
+emptynum = size(sortedCentersEmpty, 2)
+cutoff = 0;
+dlarge = inf;
+new = true;
+% cycles = 4e3;% [4e3 3e3 2e3 1e3]; 
+tic
+for emptyIndex=1:emptynum
+    if (mod(sum(centersEmptyFill), 4e3) == 1) && (sum(centersEmptyFill)>1) && new
+%         emptyIndex
+%         sum(centersEmptyFill)
+        cutoff = emptyIndex-1;
+        indlarge = centersEmptyFill & [true(1,cutoff),false(1,emptynum-cutoff)];
+        tic
+        ns = createns(sortedCentersEmpty(:,indlarge)', 'nsmethod','kdtree');
+        toc
+        new = false;
+    end
+    if sum(centersEmptyFill) == 0
         centersEmptyFill(emptyIndex) = true;
+        continue
+    end
+    indsmall = centersEmptyFill & [false(1,cutoff),true(1,emptynum-cutoff)];
+    distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
+                                sortedCentersEmpty(:, indsmall));
+    dsmall = min(sqrt(sum(distMatrix.*distMatrix,1)));           
+    if cutoff
+        [~, dlarge] = knnsearch(ns,sortedCentersEmpty(:,emptyIndex)');
+    end
+    if isempty(dsmall)
+        dsmall = dlarge;
+    end
+    if  (min(dsmall, dlarge) > sortedEmptyDensity(emptyIndex))
+        centersEmptyFill(emptyIndex) = true;
+        new = true;
     end
 end
-currentNumNodes(~currentNumNodes) = double(centersEmptyFill);
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+I(sortEmpty) = I;
+currentNumNodes(~currentNumNodes) = double(centersEmptyFill(I));
+% 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Place irrational lattices everywhere
 nodes = zeros(dim,sum(currentNumNodes));
 previousNodes = [0 cumsum(currentNumNodes)];
@@ -113,7 +156,7 @@ for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
 %     deltaI =  cornersAveragedDensity(i)/2;
 %     cubeShrinkI = 1-2*N*deltaI/A;
-    box = A * cubeShrink * [mod(.5+J/currentNumNodes(i),1);  mod(r1*J,1);  mod(r2*J,1)]/N;
+    box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
     box = bsxfun(@plus, cornersUsed(:,i)+ delta*A/N , box(randperm(dim),:));    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
@@ -140,8 +183,8 @@ toc
 fprintf('\n');
 
 %% Repel and save nodes
-kValue =  ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = 20;
+kValue = 25;% ceil(max(log10( size(cnf,2) ).^2-5,12));
+repelSteps = 30;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
@@ -150,7 +193,10 @@ if ~exist('cnf_bdry','var')
     cnf_bdry = [];
 end
 cnf = [cnf cnf_bdry];
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,A,in_domainF,jitter);
+
+clear in_domainF;
+in_domainF = @(x,y,z) in_shell(x,y,z,1,2.729878607);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,jitter);
 
 %% Plot the results
 pbaspect([1 1 1])
@@ -166,42 +212,11 @@ el = 30;
 view(az,el);
 grid on;
 axis vis3d
-
-figure(3);
-[~, D] = knnsearch(cnf', cnf', 'k', 2);
-rdens_cnf = D(:,2);
-rdens_fun = densityF(cnf);
-ratio = rdens_fun./rdens_cnf';
-diff = abs(rdens_fun - rdens_cnf');
-radii = sqrt( sum( cnf.*cnf,1 ) );
-
-plot(radii,ratio,'.k', 'MarkerSize',4)
-hold on;
-plot(radii,diff,'.g', 'MarkerSize',4)
-set(gca,'FontSize',12)
-xlabel('Radius {\bf\it{N}}','FontSize',24);
-ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
-
+% 
 %% Density recovery
-maxdiff = max(diff);
-meandiff = mean(diff);
-minratio = min(ratio);
-maxratio = max(ratio);
-quantile10 = quantile(ratio,0.1);
-quantile90 = quantile(ratio,0.9);
-meanratio = mean(ratio);
-varratio = var(ratio);
-fprintf('\nmaxdiff\t\tmeandiff\n');
-fprintf('%3.6f\t%3.6f\n',maxdiff,meandiff)
-fprintf('minratio\tmaxratio\tquantile10\tquantile90\n');
-fprintf('%3.6f\t%3.6f\t%3.6f\t%3.6f\t\n', minratio,maxratio,quantile10,quantile90)
-fprintf('meanratio\tvarratio\n')
-fprintf('%3.6f\t%3.6f\n',meanratio,varratio)
-figure(4)
-plot3(cnf(1,ratio>quantile90),cnf(2,ratio>quantile90),cnf(3,ratio>quantile90),'.k','MarkerSize',msize)
-hold on;
-plot3(cnf(1,ratio<quantile10),cnf(2,ratio<quantile10),cnf(3,ratio<quantile10),'.r','MarkerSize',msize)
-axis vis3d;
-% min_bad_radius = min(sqrt(sum(cnf(:,ratio>quantile75).^2,1)))
+% Right density:
+rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
+dcompare(cnf, rdensity, 'y');
+
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

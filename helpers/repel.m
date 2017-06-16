@@ -2,7 +2,7 @@ function cnf = repel(cnf,...
                     N_moving,...
                     k_value,...
                     repel_steps,...
-                    ~,...
+                    densityF,...
                     in_domainF,...
                     jitter,...
                     s,...
@@ -11,15 +11,16 @@ function cnf = repel(cnf,...
                 )
 %REPEL 
 % cnf = repel(cnf,...
-%             N_moving,
-%             k_value,...
-%             repel_steps,...
-%             A,...
-%             in_domainF,...
-%             densityF,...
-%             jitter,...
-%             s,...
-%             outfile)
+%                     N_moving,...
+%                     k_value,...
+%                     repel_steps,...
+%                     densityF,...
+%                     in_domainF,...
+%                     jitter,...
+%                     s,...
+%                     outfile,...
+%                     pullbackF...
+%                 )
 % Tries to distribute the configuration cnf of size dim x N, repelling 
 % it in the direction of the Riesz gradient by a constant multiple of the 
 % distance to the nearest neighbor. Uses the domain checker function
@@ -48,7 +49,7 @@ function cnf = repel(cnf,...
 dim = size(cnf,1);
 pt_num = size(cnf,2);   
 bins = 200;
-offset = 20;         % divides the minimal separation in the main loop
+offset = 18;         % divides the minimal separation in the main loop
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if ~exist('s', 'var')
     s = 5.0;
@@ -79,7 +80,7 @@ end
 [IDX, D] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
 IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
 step = D(:,2);
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 fprintf( '\nEntering the repel.m subroutine; a timer starts.\n\n')
 tic
@@ -93,30 +94,38 @@ if outfile ~=0
     fprintf( outfile, 'Mean separation before repel steps:      %3.8f\n\n',   outtemp);
 end
 fprintf(   'Mean separation before repel steps:      %3.8f\n\n',   outtemp)
-toc
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% %  histogram
-fprintf('\n')
-figure(2);
-h1=histogram(D(:,2),bins);
-h1.FaceColor = [0 0 0.9];        % blue
-h1.EdgeAlpha=.1;
-hold on;
+% fprintf('\n')
+% figure(2);
+% h1=histogram(D(:,2),bins);
+% h1.FaceColor = [0 0 0.9];        % blue
+% h1.EdgeAlpha=.1;
+% hold on;
 % D_old = D;       % uncomment this line to compare distribution/invoke plot3 below 
 
 %% Main loop
 for iter=1:repel_steps
+    if mod(iter,5) == 0
+        [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
+        IDX = IDX(:,2:end)';
+    end
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
 %       vectors pointing from each node to its (quasi-) k_value nearest 
 %       neighbors
     knn_differences = cnf_repeated - cnf(:,IDX);
-    knn_norms_squared = sum(knn_differences.*knn_differences,1);               
-    riesz_weights = compute_weights(knn_norms_squared);     
+    knn_norms_squared = sum(knn_differences.*knn_differences,1); 
+%         ./reshape(repmat( densityF(cnf(:,1:N_moving)),k_value,1),1,[]);    
+    if isa(densityF,'function_handle')
+        knn_density = 1 ./ densityF(cnf(:,IDX));   
+        riesz_weights = compute_weights(knn_norms_squared .* knn_density) .* (knn_density) ;     
+    else
+        riesz_weights = compute_weights(knn_norms_squared);
+    end
     gradient = bsxfun(@times,riesz_weights,knn_differences);
     gradient = reshape(gradient, dim, k_value, []);
-% % % %   Riesz gradient for this node configuration 
+% % % % % % % % % Riesz gradient for this node configuration  % % % % % % %
     gradient = reshape(sum(gradient,2), dim, []);
-%     Add jitter:
     if isa(noise,'function_handle')
         gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
@@ -146,14 +155,15 @@ if outfile ~=0
     fprintf( outfile, 'Mean separation after:      %3.8f\n',  outtemp);
 end
 fprintf( 'Mean separation after:      %3.8f\n',  outtemp)
-toc
 % % % % % % % % % % % % % % % Histogram % % % % % % % % % % % % % % % % % %  
-figure(2);
-h2 = histogram(D(:,2),bins);
-h2.FaceColor = [0.9 0 0];       % red
-h2.EdgeAlpha=.1;
-set(gca,'FontSize',12)
-ylabel('Number of nodes','FontSize',16);
-xlabel('Distance to the nearest neighbor','FontSize',16);
+% figure(2);
+% h2 = histogram(D(:,2),bins);
+% h2.FaceColor = [0.9 0 0];       % red
+% h2.EdgeAlpha=.1;
+% set(gca,'FontSize',12)
+% ylabel('Number of nodes','FontSize',16);
+% xlabel('Distance to the nearest neighbor','FontSize',16);
+% hold off;
+
 % saveas(h2,'./Output/histogram.png');
-hold off;
+

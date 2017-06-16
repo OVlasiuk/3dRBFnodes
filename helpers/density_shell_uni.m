@@ -4,4 +4,8 @@ function d = density_shell_uni(v)
 % Return a constant density.
 % Takes matrices of size dim x N, where N is the number of vectors.
 % v = cell2mat(varargin);
-d = .048 * sqrt(sum(v.*v, 1));
+rs = sqrt(sum(v.*v, 1));
+% d = 0.0346 * rs;          % 0.0346/0.0215 = 1.6093
+d = 0.0215 * rs;
+% 2.729878606661392
+d(rs > 2.72986 | rs < 1.00001 ) = .2;
