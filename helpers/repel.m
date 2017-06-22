@@ -106,22 +106,24 @@ fprintf(   'Mean separation before repel steps:      %3.8f\n\n',   outtemp)
 
 %% Main loop
 for iter=1:repel_steps
-    if mod(iter,5) == 0
-        [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
-        IDX = IDX(:,2:end)';
-    end
+%     if mod(iter,5) == 0
+%         [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
+%         IDX = IDX(:,2:end)';
+%     end
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
-%       vectors pointing from each node to its (quasi-) k_value nearest 
-%       neighbors
-    knn_differences = cnf_repeated - cnf(:,IDX);
-    knn_norms_squared = sum(knn_differences.*knn_differences,1); 
-%         ./reshape(repmat( densityF(cnf(:,1:N_moving)),k_value,1),1,[]);    
+%       vectors pointing to each node from its (quasi-) k_value nearest 
+%       neighbors:
+    knn_differences = cnf_repeated - cnf(:,IDX);      
+    
     if isa(densityF,'function_handle')
-        knn_density = 1 ./ densityF(cnf(:,IDX));   
-        riesz_weights = compute_weights(knn_norms_squared .* knn_density) .* (knn_density) ;     
+        knn_density =  densityF(cnf(:,IDX)) ./ reshape(repmat( densityF(cnf(:,1:N_moving)),k_value,1),1,[]);   
+        knn_norms_squared = sum(knn_differences.*knn_differences,1)./(knn_density.* knn_density); 
+        riesz_weights = compute_weights(knn_norms_squared)./knn_density;  
+%                 (knn_density.* knn_density.* knn_density.* knn_density.* knn_density) ;     
     else
         riesz_weights = compute_weights(knn_norms_squared);
     end
+    
     gradient = bsxfun(@times,riesz_weights,knn_differences);
     gradient = reshape(gradient, dim, k_value, []);
 % % % % % % % % % Riesz gradient for this node configuration  % % % % % % %

@@ -13,9 +13,9 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 100;                         % number of boxes per side of the cube
+N = 80;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
-A = 8;          
+A = 6;          
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % Specific to the atmodeling problems:
@@ -49,7 +49,7 @@ if ~exist('densityF','var')
     densityF=@density_shell_uni;
 end
 if ~exist('in_domainF','var')
-    in_domainF = @(x,y,z) in_shell(x,y,z,1+.001,rcapRad - .001);
+    in_domainF = @(x,y,z) in_shell(x,y,z,1+.0001,rcapRad - .0001);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
@@ -184,7 +184,7 @@ fprintf('\n');
 
 %% Repel and save nodes
 kValue = 25;% ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = 30;
+repelSteps = 15;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
@@ -192,14 +192,21 @@ end
 if ~exist('cnf_bdry','var')
     cnf_bdry = [];
 end
+% Right density:
+rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
+dcompare(cnf, rdensity);
+figure(5);
+histogram(sqrt(sum(cnf.*cnf,1)), 1000);
+
 cnf = [cnf cnf_bdry];
 
 clear in_domainF;
-in_domainF = @(x,y,z) in_shell(x,y,z,1,2.729878607);
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,jitter);
+in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF,jitter);
 
 %% Plot the results
 pbaspect([1 1 1])
+daspect([1 1 1])
 figure(1);
 msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
@@ -214,9 +221,9 @@ grid on;
 axis vis3d
 % 
 %% Density recovery
-% Right density:
-rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
-dcompare(cnf, rdensity, 'y');
-
+dcompare(cnf, rdensity, 1);
+figure(6);
+rcnf = sqrt(sum(cnf.*cnf,1));
+histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 1000);
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
