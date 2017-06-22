@@ -13,7 +13,7 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 80;                         % number of boxes per side of the cube
+N = 150;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
 A = 6;          
 
@@ -46,7 +46,7 @@ if ~exist('Output','dir')
     mkdir Output;
 end
 if ~exist('densityF','var')
-    densityF=@density_shell_uni;
+    densityF=@(v)  0.0215 * sqrt(sum(v.*v, 1));
 end
 if ~exist('in_domainF','var')
     in_domainF = @(x,y,z) in_shell(x,y,z,1+.0001,rcapRad - .0001);
@@ -154,8 +154,6 @@ previousNodes = [0 cumsum(currentNumNodes)];
     
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
-%     deltaI =  cornersAveragedDensity(i)/2;
-%     cubeShrinkI = 1-2*N*deltaI/A;
     box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
     box = bsxfun(@plus, cornersUsed(:,i)+ delta*A/N , box(randperm(dim),:));    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
@@ -196,17 +194,17 @@ end
 rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
 dcompare(cnf, rdensity);
 figure(5);
-histogram(sqrt(sum(cnf.*cnf,1)), 1000);
+hold on;
+rcnf = sqrt(sum(cnf.*cnf,1));
+histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
 
 cnf = [cnf cnf_bdry];
 
 clear in_domainF;
 in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF,jitter);
+% cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,@density_shell_uni,in_domainF,jitter);
 
 %% Plot the results
-pbaspect([1 1 1])
-daspect([1 1 1])
 figure(1);
 msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
@@ -217,13 +215,15 @@ set(gca,'FontSize',12)
 az = -101.5;
 el = 30;
 view(az,el);
+pbaspect([1 1 1])
+daspect([1 1 1])
 grid on;
 axis vis3d
 % 
 %% Density recovery
 dcompare(cnf, rdensity, 1);
-figure(6);
+figure(5);
 rcnf = sqrt(sum(cnf.*cnf,1));
-histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 1000);
+histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
