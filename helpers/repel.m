@@ -68,7 +68,7 @@ end
 if ~exist('jitter', 'var') || jitter==0
     noise = 0;
 else 
-    noise = @() jitter*normc(randn(dim,pt_num));
+    noise = @() jitter*normc(randn(dim,N_moving));
 end
 if ~exist('outfile', 'var')
     outfile = 0;
@@ -111,7 +111,7 @@ for iter=1:repel_steps
 %         IDX = IDX(:,2:end)';
 %     end
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
-%       vectors pointing to each node from its (quasi-) k_value nearest 
+%       vectors pointing to each moving node from its (quasi-) k_value nearest 
 %       neighbors:
     knn_differences = cnf_repeated - cnf(:,IDX);      
     
@@ -129,12 +129,13 @@ for iter=1:repel_steps
 % % % % % % % % % Riesz gradient for this node configuration  % % % % % % %
     gradient = reshape(sum(gradient,2), dim, []);
     if isa(noise,'function_handle')
-        gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
+     gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
-    directions = gradient./sqrt(sum(gradient.*gradient,1));
-    step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
+    directions = gradient./sqrt(sum(gradient.*gradient,1)); 
+      step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
-                        directions(:,1:N_moving).*step(1:N_moving)/(offset+iter-1);  
+                        directions(:,1:N_moving).*step/(offset+iter-1); 
+                    
     domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
 % %                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
     if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
@@ -168,4 +169,3 @@ fprintf( 'Mean separation after:      %3.8f\n',  outtemp)
 % hold off;
 
 % saveas(h2,'./Output/histogram.png');
-
