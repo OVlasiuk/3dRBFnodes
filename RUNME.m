@@ -24,22 +24,28 @@ for i=1:numel(idx)
     fprintf('%d     %s\n', i, names{idx(i)});
     I{i} = num2str( i );
 end
-fprintf('\n Most of them will accept some input values, e.g., radial density,\n')
-fprintf('point inclusion function, etc.\n')
-fprintf('  Type "help name_of_the_example" while in Matlab prompt to see details\n'); 
-fprintf('and possible input values. Alternatively, type the number of a \n')
-fprintf('script you''d like to run now with the default parameters, or press\n');
-fprintf('Return to go back to Matlab prompt. Type "A" to list all m-files\n');
-fprintf('in the current project. For most of these, typing "help name_of_the_file"\n');
-inp=input('will produce some additional info.\n','s');
+fprintf('\nMost of them will accept some input values, e.g., radial density,\n')
+fprintf('point inclusion function, etc. Type "help name_of_the_example" while\n')
+fprintf('in Matlab prompt to see details and possible input values.\n'); 
+fprintf('Now you have the following options:\n \t-- enter the number of a script you''d like to run with the \n')
+fprintf('default parameters;\n');
+fprintf('\t-- press Return to go back to Matlab prompt;\n');
+fprintf('\t-- type "A<Return>" to list all m-files in the current project.\n')
+fprintf('For most of these, typing "help name_of_the_file" will produce\n');
+inp=input('some additional info.\n>> ','s');
 if isempty(I)
 	d(s_old)
     return
 else
     switch inp
         case {'a','A'}
-            dir *.m;
-            dir helpers*/*.m;
+            [s, r] = system('git ls-files | egrep "*.m\>"');
+            if s ~=0
+                dir *.m;
+                dir helpers*/*.m;
+            else
+                fprintf('\n%s',r)
+            end
         case I
             run( names{ idx(eval(inp)) } )
     end

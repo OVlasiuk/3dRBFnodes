@@ -24,7 +24,7 @@ corners = [rem((I-1), N);  floor(rem(I-1, N^2)/N);  floor((I-1)/N^2)];
 
 for nodes_per_box=1:COUNT    
     j=1:nodes_per_box;
-    box = CUBE_SHRINK * [j/nodes_per_box;  mod(R1*j,1);  mod(R2*j,1)];
+    box = CUBE_SHRINK * [mod(j/nodes_per_box+.5,1);  mod(R1*j,1);  mod(R2*j,1)];
     box = box +  DELTA;
     nodes = reshape(repmat(corners,nodes_per_box,1),dim, []) +...
                         reshape( repmat(box,1,size(corners,2)), dim, []);

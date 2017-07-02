@@ -2,18 +2,24 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 %NODE_SHELL
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
-% distance to the nearest neighbor) given by the handle densityF.
+% distance to the nearest neighbor) given by the handle densityF: a 
+% constant multiple of the norm. The nodes are confined to a spherical
+% shell with radii 1 and rcapRad; the latter is determined by a coordinate
+% transform from Earth scale to the working scale. In the Earth scale, the
+% desired node set is such that between radii 'a' and 'ztop' there are 
+% about 'Nr' layers with about 'Ns' nodes in each.
+% 
 % densityF -- handle to the density function, accepts an array of size 
-%   (dim)x(#of points); (currently only dim=3);
+%   (dim)x(#of points): densityF(cnf); (currently only dim=3);
 % in_domainF -- handle to the point inclusion function, accepts three arrays
-% of coordinates, in_domainF(x,y,z); returns a logical array of the same
+% of coordinates: in_domainF(x,y,z); returns a logical array of the same
 % size as x;
 % 
-% See also RUNME, NODE_EARTH.
+% See also RUNME, NODE_EARTH, NODE_DIS.
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 150;                         % number of boxes per side of the cube
+N = 90;                         % number of boxes per side of the cube
 maxNodesPerBox = 80;
 A = 6;          
 
@@ -31,7 +37,7 @@ rcapRad = rcap(a+ztop) / rcap(a);
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)*.8;
+cubeShrink = 1 - 0.5* maxNodesPerBox^(-1/dim);
 delta = (1-cubeShrink)/2;
 r1 = 6*pi;
 r2 = exp(1)/2;
@@ -46,7 +52,7 @@ if ~exist('Output','dir')
     mkdir Output;
 end
 if ~exist('densityF','var')
-    densityF=@(v)  0.0215 * sqrt(sum(v.*v, 1));
+    densityF=@(v)  0.023 * sqrt(sum(v.*v, 1));
 end
 if ~exist('in_domainF','var')
     in_domainF = @(x,y,z) in_shell(x,y,z,1+.0001,rcapRad - .0001);
@@ -100,14 +106,11 @@ currentNumNodes = num_radius(cornersAveragedDensity*N/A);
 %% Place centers into empty boxes
 centersEmpty = cornersUsed(:, ~currentNumNodes) + A/2/N;
 centersEmptyDensity = densityF(centersEmpty);
-[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity);
-
+[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity,'descend');
 sortedCentersEmpty = centersEmpty(:,sortEmpty);
-
 centersEmptyFill = false(1,size(sortedCentersEmpty,2));
 
 I = 1:size(sortedCentersEmpty, 2);
-
 emptynum = size(sortedCentersEmpty, 2)
 cutoff = 0;
 dlarge = inf;
@@ -115,7 +118,7 @@ new = true;
 % cycles = 4e3;% [4e3 3e3 2e3 1e3]; 
 tic
 for emptyIndex=1:emptynum
-    if (mod(sum(centersEmptyFill), 4e3) == 1) && (sum(centersEmptyFill)>1) && new
+    if (mod(sum(centersEmptyFill), 5e3) == 1) && (sum(centersEmptyFill)>1) && new
 %         emptyIndex
 %         sum(centersEmptyFill)
         cutoff = emptyIndex-1;
@@ -146,7 +149,6 @@ for emptyIndex=1:emptynum
 end
 I(sortEmpty) = I;
 currentNumNodes(~currentNumNodes) = double(centersEmptyFill(I));
-% 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Place irrational lattices everywhere
 nodes = zeros(dim,sum(currentNumNodes));
@@ -154,7 +156,7 @@ previousNodes = [0 cumsum(currentNumNodes)];
     
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
-    box = A * cubeShrink * [J/currentNumNodes(i);  mod(r1*J,1);  mod(r2*J,1)]/N;
+    box = A * cubeShrink * [mod(J/currentNumNodes(i) + .5,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
     box = bsxfun(@plus, cornersUsed(:,i)+ delta*A/N , box(randperm(dim),:));    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
@@ -181,8 +183,8 @@ toc
 fprintf('\n');
 
 %% Repel and save nodes
-kValue = 25;% ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = 15;
+kValue = 30;% ceil(max(log10( size(cnf,2) ).^2-5,12));
+repelSteps = 40;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
@@ -202,7 +204,7 @@ cnf = [cnf cnf_bdry];
 
 clear in_domainF;
 in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
-% cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,@density_shell_uni,in_domainF,jitter);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF,jitter);
 
 %% Plot the results
 figure(1);
@@ -225,5 +227,6 @@ dcompare(cnf, rdensity, 1);
 figure(5);
 rcnf = sqrt(sum(cnf.*cnf,1));
 histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
+print('radial','-dpdf','-r300','-bestfit')
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

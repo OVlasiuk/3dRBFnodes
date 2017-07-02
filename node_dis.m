@@ -20,11 +20,10 @@ maxNodesPerBox = 80;
 A = 12;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
-repelPower = 5;                 
+repelPower = 4;                 
 oct = 2^dim;
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
 delta = (1-cubeShrink)/2;
-r0 = exp(1)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
@@ -92,7 +91,7 @@ previousNodes = [0 cumsum(currentNumNodes)];
     
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
-    box = A * cubeShrink * [mod(r0*J,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
+    box = A * cubeShrink * [mod(J/currentNumNodes(i) + .5,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
     box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);   
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
@@ -124,7 +123,7 @@ fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps,
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf,size(cnf,2),kValue,repelSteps,A,in_domainF,jitter,repelPower,0);
+cnf = repel(cnf,size(cnf,2),kValue,repelSteps,densityF,in_domainF,jitter,0,A);
 
 %% Plot the results
 pbaspect([1 1 1])

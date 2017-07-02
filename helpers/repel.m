@@ -3,21 +3,23 @@ function cnf = repel(cnf,...
                     k_value,...
                     repel_steps,...
                     densityF,...
-                    in_domainF,...
+                    in_domainF,...                   
                     jitter,...
-                    s,...
-                    pullbackF...
+                    pullbackF,...
+                    A,...
+                    s...
                 )
 %REPEL 
-% cnf = repel(cnf,...
+%         cnf = repel(cnf,...
 %                     N_moving,...
 %                     k_value,...
 %                     repel_steps,...
 %                     densityF,...
-%                     in_domainF,...
+%                     in_domainF,...                   
 %                     jitter,...
-%                     s,...
-%                     pullbackF...
+%                     pullbackF,...
+%                     A,...
+%                     s...
 %                 )
 % Tries to distribute the configuration cnf of size dim x N, repelling 
 % it in the direction of the Riesz gradient by a constant multiple of the 
@@ -28,30 +30,32 @@ function cnf = repel(cnf,...
 % N_moving -- move only the first N_moving points in cnf;
 % k_value -- the number of nearest neighbors used in the repel algorithm;
 % repel_steps -- iterations of the step process to be made;
-% A -- sidelength of the outer bounding cube: the repel process will be
-%   restricted to the cube [-A/2, A/2]^3.
 % in_domainF -- domain checker; must take (x,y,z) as (arrays of) coordinates
 %   and return a boolean array of answers "in domain/not in the domain" for 
 %   each point. Pass 0 or nothing to not perform any domain checks.
 % densityF -- determines radial distance to the nearest node;
 % jitter -- a number between 0 and 1 serving as a factor of a random summand
 %   for the direction of repulsion.
+% pullbackF -- a map to use when pulling back nodes moved pushed outside
+% the domain by repulsion.
+% A -- sidelength of the outer bounding cube: the repel process will be
+%   restricted to the cube [-A/2, A/2]^3.
 % s -- the exponent used in the Riesz kernel;
 %   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
-% pullbackF -- a map to use when pulling back nodes moved pushed outside
-% the domain by repulsion.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-%% Initialize
+%% Initialize variables
 dim = size(cnf,1);
-pt_num = size(cnf,2);   
 bins = 200;
 offset = 18;         % divides the minimal separation in the main loop
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if ~exist('s', 'var')
     s = 4.0;
+end
+if ~exist('A', 'var') || A==0
+    A = 100.0;
 end
 switch s
     case 4.0
@@ -84,9 +88,9 @@ tic
 [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
 step = D(:,2);   
-fprintf( 'Minimal separation before repel steps:      %3.8f\n', min(step))
+fprintf( 'Minimal separation before repel steps:\t%3.8f\n', min(step))
 outtemp = mean(D(:,2));
-fprintf(   'Mean separation before repel steps:      %3.8f\n\n',   outtemp)
+fprintf(   'Mean separation before repel steps:\t%3.8f\n\n',   outtemp)
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Histogram
 % fprintf('\n')
@@ -99,7 +103,7 @@ fprintf(   'Mean separation before repel steps:      %3.8f\n\n',   outtemp)
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Main loop
 for iter=1:repel_steps
-    if mod(iter,6) == 1
+    if mod(iter,10) == 1
         [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
         IDX = IDX(:,2:end)';
     end
@@ -107,32 +111,35 @@ for iter=1:repel_steps
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
 %   k_value vectors pointing to each moving node from its k_value nearest 
 %   neighbors:
-    knn_differences = cnf_repeated - cnf(:,IDX);      
-    
+    knn_cnf = cnf(:,IDX);
+    knn_differences = cnf_repeated - knn_cnf;
+    knn_norms_squared = sum(knn_differences.*knn_differences,1); 
     if isa(densityF,'function_handle')
-        knn_density =  densityF(cnf(:,IDX));   
-        knn_norms_squared = sum(knn_differences.*knn_differences,1); 
-        riesz_weights = s*compute_weights(knn_density).*...
-                        compute_riesz(knn_norms_squared)./...
-                        knn_norms_squared;     
-    else
+        knn_density =  densityF(knn_cnf);   
         riesz_weights = compute_riesz(knn_norms_squared);
+        weights = s*compute_weights(knn_density) .* riesz_weights ./ ...
+                                                        knn_norms_squared;
+%         weights2 = s * riesz_weights .* compute_weights(knn_density)./knn_density;
+    else
+        weights = compute_riesz(knn_norms_squared)./knn_norms_squared;
     end
     
-    gradient = bsxfun(@times,riesz_weights,knn_differences);
+    gradient = bsxfun(@times,weights,knn_differences);%  -...
+%                         bsxfun(@times, weights2,cnf_repeated./knn_rads);
     gradient = reshape(gradient, dim, k_value, []);
-% % % % % % % % % Riesz gradient for this node configuration  % % % % % % %
     gradient = reshape(sum(gradient,2), dim, []);
     if isa(noise,'function_handle')
-     gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
+        gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
     directions = gradient./sqrt(sum(gradient.*gradient,1)); 
     step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
-                        directions(:,1:N_moving).*step/(offset+iter-1); 
-                    
+                            directions(:,1:N_moving).*step/(offset+iter-1); 
+    if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
     domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
-% %                     ~sum((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1)
+    else
+    domain_check = ~any((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1);
+    end
     if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
         cnf(:,~domain_check) = pullbackF(cnf_tentative(:,~domain_check)); 
     end    
@@ -143,8 +150,8 @@ toc
  
 %% New separation
 [~, D] = knnsearch(cnf', cnf', 'k', k_value+1);   
-fprintf(   'Minimal separation after:      %3.8f\n',  min(D(:,2)));
-fprintf( 'Mean separation after:      %3.8f\n',  mean(D(:,2)))
+fprintf(   'Minimal separation after:\t\t%3.8f\n',  min(D(:,2)));
+fprintf( 'Mean separation after:\t\t\t%3.8f\n',  mean(D(:,2)))
 
 %% % % % % % % % % % % % % % % Histogram % % % % % % % % % % % % % % % % % %  
 % figure(2);

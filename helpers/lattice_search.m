@@ -13,9 +13,9 @@ addpath .
 its = 1e5;
 format long;
 max_nodes_per_box = 40;          
-num = 500;
+num = 200;
 dim = 3;                        
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)/64;
+cubeShrink = 1 - 0.5* maxNodesPerBox^(-1/dim);
 delta = (1-cubeShrink)/2;
 l = @(r1,r2) lattice_by_count(num,cubeShrink,r1,r2,'n');
 

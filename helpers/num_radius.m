@@ -12,14 +12,14 @@ s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))
 
-persistent rtable;
-if isempty(rtable)
+persistent mtable;
+if isempty(mtable)
     load('../Output/unit_lattice_radius.mat');    
 end
-num = interp1(rtable,1:numel(rtable),r,'pchip');
+num = interp1(mtable,1:numel(mtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
 num = round(num.*(r<=1.0));
-num(r<rtable(end)) = size(rtable,2);
+num(r<mtable(end)) = size(mtable,2);
 % num((1+sqrt(3)/2<r) & (r<=2+1+sqrt(3)/2)) = 1;
 
 % ind = INDEX(uint16(max(num,1)));
