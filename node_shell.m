@@ -37,7 +37,7 @@ rcapRad = rcap(a+ztop) / rcap(a);
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
-cubeShrink = 1 - 0.5* maxNodesPerBox^(-1/dim);
+cubeShrink = 1 - maxNodesPerBox^(-1/dim)/2;
 delta = (1-cubeShrink)/2;
 r1 = 6*pi;
 r2 = exp(1)/2;
@@ -52,10 +52,10 @@ if ~exist('Output','dir')
     mkdir Output;
 end
 if ~exist('densityF','var')
-    densityF=@(v)  0.023 * sqrt(sum(v.*v, 1));
+    densityF=@(v)  ksep(Ns) * sqrt(sum(v.*v, 1)) /1.2 ;
 end
 if ~exist('in_domainF','var')
-    in_domainF = @(x,y,z) in_shell(x,y,z,1+.0001,rcapRad - .0001);
+    in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
@@ -118,6 +118,10 @@ new = true;
 % cycles = 4e3;% [4e3 3e3 2e3 1e3]; 
 tic
 for emptyIndex=1:emptynum
+    if ~any(centersEmptyFill)
+        centersEmptyFill(emptyIndex) = true;
+        continue
+    end
     if (mod(sum(centersEmptyFill), 5e3) == 1) && (sum(centersEmptyFill)>1) && new
 %         emptyIndex
 %         sum(centersEmptyFill)
@@ -127,10 +131,6 @@ for emptyIndex=1:emptynum
         ns = createns(sortedCentersEmpty(:,indlarge)', 'nsmethod','kdtree');
         toc
         new = false;
-    end
-    if sum(centersEmptyFill) == 0
-        centersEmptyFill(emptyIndex) = true;
-        continue
     end
     indsmall = centersEmptyFill & [false(1,cutoff),true(1,emptynum-cutoff)];
     distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
@@ -149,7 +149,7 @@ for emptyIndex=1:emptynum
 end
 I(sortEmpty) = I;
 currentNumNodes(~currentNumNodes) = double(centersEmptyFill(I));
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Place irrational lattices everywhere
 nodes = zeros(dim,sum(currentNumNodes));
 previousNodes = [0 cumsum(currentNumNodes)];
@@ -227,6 +227,6 @@ dcompare(cnf, rdensity, 1);
 figure(5);
 rcnf = sqrt(sum(cnf.*cnf,1));
 histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
-print('radial','-dpdf','-r300','-bestfit')
+% print('radial','-dpdf','-r300','-bestfit')
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

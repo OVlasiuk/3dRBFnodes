@@ -14,7 +14,7 @@ cd(s(1:end-10))
 
 persistent mtable;
 if isempty(mtable)
-    load('../Output/unit_lattice_radius.mat');    
+    load('../Output/mrtable_riesz.mat');    
 end
 num = interp1(mtable,1:numel(mtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
