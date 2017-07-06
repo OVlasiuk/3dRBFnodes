@@ -135,10 +135,10 @@ for iter=1:repel_steps
     step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
                             directions(:,1:N_moving).*step/(offset+iter-1); 
-    if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
-    domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
+    if exist('in_domainF', 'var') && isa(in_domainF,'function_handle')
+        domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
     else
-    domain_check = ~any((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1);
+        domain_check = ~any((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1);
     end
     if exist('pullbackF', 'var') && isa(pullbackF,'function_handle')
         cnf(:,~domain_check) = pullbackF(cnf_tentative(:,~domain_check)); 
