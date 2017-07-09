@@ -74,13 +74,15 @@ end
 [lmax, ind]=max(lattices,[],1);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 close all;
-figure(1);
+f1 = figure;
+f1.PaperType = 'A2';
+% f1.Pa
 hold on;
 for i=1:size(lattices,1)
     plot(lattices(i,1:extent),markers(i),'MarkerSize',6)
 end
 i = i+1;
-plot(mtable,markers(i),'MarkerSize',12)
+plot(mtable,markers(i),'MarkerSize',8)
 
 set(gca,'FontSize',12)
 xlabel('Number of nodes in a box','FontSize',20);
@@ -92,13 +94,22 @@ for i=1:numel(legend_string)-1
     legend_string{i} = legend_ratios(2*i-1)+ string(' and ')+ legend_ratios(2*i);
 end
 legend_string{end} = string('Periodic Riesz optimizers');
-leg=legend(legend_string{:});
-leg.FontSize = 16;
-
+[leg, ico] = legend(legend_string{:});
+leg.FontSize = 17;
+i = 1;
+while isa(ico(i),'matlab.graphics.primitive.Text')
+    ico(i).FontSize = 16;
+    i=i+1;
+end
+for j=i:numel(ico)
+    if ico(i).Marker ~= 'none'
+        ico(i).MarkerSize = 18;
+    end
+end
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-figure(2);
+f2 = figure;
 hold on;
 for i=1:size(lattices,1)
     plot(lattices(i,1:extent)./minlattices(i,1:extent),markers(i),'MarkerSize',6)
@@ -114,7 +125,7 @@ ylabel('Mean to minimal separation ratio','FontSize',20);
 leg=legend(legend_string{:});
 leg.FontSize = 16;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-figure(3)
+f3 = figure;
 hold on
 h1 = histogram(ind);
 h2 = histogram(ind(1:80));

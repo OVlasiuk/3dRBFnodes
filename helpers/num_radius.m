@@ -1,4 +1,4 @@
-function  num = num_radius(r)
+function  num = num_radius(r, varargin)
 %NUM_RADIUS 
 % num = num_radius(r)
 % Returns the number of nodes in 3-dimensional unit cube, drawn from an
@@ -12,10 +12,16 @@ s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))
 
-persistent mtable;
-if isempty(mtable)
+% persistent mtable;
+% if isempty(mtable)
+if isempty(varargin)
+    load('../Output/unit_lattice_radius.mat');
+elseif any(varargin{:} == 'riesz')
     load('../Output/mrtable_riesz.mat');    
+elseif any(varargin{:} == 'irrational')
+    load('../Output/unit_lattice_radius.mat');
 end
+% end
 num = interp1(mtable,1:numel(mtable),r,'pchip');
 %  We assume that the neighbor boxes have at least one node in them
 num = round(num.*(r<=1.0));

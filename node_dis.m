@@ -15,14 +15,14 @@ function cnf = node_dis(densityF,in_domainF)
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
 
 
-N = 100;                         % number of boxes per side of the cube
-maxNodesPerBox = 80;
-A = 12;                          
+N = 120;                         % number of boxes per side of the cube
+maxNodesPerBox = 1000;
+A = 7;                          
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        % ATTN: the subsequent code is NOT dimension-independent
 repelPower = 4;                 
 oct = 2^dim;
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
+cubeShrink = 1 - maxNodesPerBox^(-1/dim)/2;
 delta = (1-cubeShrink)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
@@ -92,7 +92,7 @@ previousNodes = [0 cumsum(currentNumNodes)];
 for i=1:size(cornersUsed,2)
     J = 1:currentNumNodes(i);
     box = A * cubeShrink * [mod(J/currentNumNodes(i) + .5,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
-    box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box);   
+    box = bsxfun(@plus, cornersUsed(:,i)+A*delta/N, box(randperm(3),:));   
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
 toc
@@ -118,11 +118,13 @@ fprintf('\n');
  
 %% Repel and save nodes
 kValue =  ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = ceil(max(.9*log10( size(cnf,2) ).^2-5,10));
+repelSteps = ceil(max(1.4*log10( size(cnf,2) ).^2-5,10));
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
+
+dcompare(cnf,densityF,1);
 cnf = repel(cnf,size(cnf,2),kValue,repelSteps,densityF,in_domainF,jitter,0,A);
 
 %% Plot the results
@@ -140,6 +142,7 @@ view(az,el);
 grid on;
 axis vis3d
 
+
 figure(3);
 [~, D] = knnsearch(cnf', cnf', 'k', 2);
 rdens_cnf = D(:,2);
@@ -149,17 +152,18 @@ diff = abs(rdens_fun - rdens_cnf');
 plot(ratio);
 hold on;
 plot(diff)
-maxdiff = max(diff);
-meandiff = mean(diff);
 
 set(gca,'FontSize',12)
 xlabel('Node {\bf\it{N}}','FontSize',24);
 ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
-leg = legend('Ratio','Difference');
-minratio = min(ratio)
-maxratio = max(ratio)
-meanratio = mean(ratio)
-varratio = var(ratio)
+legend('Ratio','Difference');
+% minratio = min(ratio)
+% maxratio = max(ratio)
+% meanratio = mean(ratio)
+% varratio = var(ratio)
+
+
+dcompare(cnf,densityF,1);
 
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

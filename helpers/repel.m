@@ -77,10 +77,6 @@ if ~exist('jitter', 'var') || jitter==0
 else 
     noise = @() jitter*normc(randn(dim,N_moving));
 end
-if ~exist('in_domainF', 'var') || ~isa(in_domainF,'function_handle')
-     in_domainF = @(x, y, z) ones(size(x));
-end
-
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 fprintf( '\nEntering the repel.m subroutine; a timer starts.\n\n')
 tic
@@ -121,7 +117,7 @@ for iter=1:repel_steps
                                                         knn_norms_squared;
 %         weights2 = s * riesz_weights .* compute_weights(knn_density)./knn_density;
     else
-        weights = compute_riesz(knn_norms_squared)./knn_norms_squared;
+        weights = s*compute_riesz(knn_norms_squared)./knn_norms_squared;
     end
     
     gradient = bsxfun(@times,weights,knn_differences);%  -...
