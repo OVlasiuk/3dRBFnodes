@@ -27,7 +27,7 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 dim = 3;
 maxNodesPerBox = 80; 
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)/2;
+cubeShrink = 1; % - maxNodesPerBox^(-1/dim)/2;
 delta = (1-cubeShrink)/2;
 num = 200;
 extent = 200;
