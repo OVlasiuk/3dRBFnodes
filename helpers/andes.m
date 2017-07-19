@@ -120,7 +120,7 @@ hh.LineStyle=':';
 hh.LineWidth=1.5;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
-ylabel('Number of nodes','FontSize',24);
+ylabel('Probability of the characteristic','FontSize',24);
 xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
 separation_surface = min(Dsurf(:,2))
 
