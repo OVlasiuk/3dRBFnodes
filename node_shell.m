@@ -1,4 +1,4 @@
-function cnf = node_shell(cnf_bdry, densityF,in_domainF)
+function cnf = node_sh(cnf_bdry, densityF,in_domainF)
 %NODE_SHELL
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
@@ -19,8 +19,8 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 90;                         % number of boxes per side of the cube
-maxNodesPerBox = 80;
+N = 65;                         % number of boxes per side of the cube
+maxNodesPerBox = 60;
 A = 6;          
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -37,8 +37,7 @@ rcapRad = rcap(a+ztop) / rcap(a);
 jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
-cubeShrink = 1 - maxNodesPerBox^(-1/dim)/2;
-delta = (1-cubeShrink)/2;
+
 r1 = 6*pi;
 r2 = exp(1)/2;
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
@@ -52,31 +51,17 @@ if ~exist('Output','dir')
     mkdir Output;
 end
 if ~exist('densityF','var')
-    densityF=@(v)  ksep(Ns) * sqrt(sum(v.*v, 1)) /1.2 ;
+    densityF=@(v)  ksep(Ns) * sqrt(sum(v.*v, 1))   ;
 end
 if ~exist('in_domainF','var')
     in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
 end
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-try 
-    load('./Output/unit_lattice_radius.mat')
-    if (cubeShrink ~= CUBE_SHRINK)...
-            || (r1 ~= R1)...
-            || (r2 ~= R2)
-        throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
-    end
-catch
-    fprintf('\nLooks like the interpolation table for this number of lattice\n');
-    fprintf('nodes is missing or not up to date... Hang on there, I''ll make\n'); 
-    fprintf('a new one for you. This may take a few minutes, but we''ll only\n');
-    fprintf('do it once.\n');
-    lattice_by_count(maxNodesPerBox,cubeShrink,r1,r2,'y');
-    fprintf('...\nDone.\n\n')
-end
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% MAIN
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Populate vertices of the unit cube 
+load('Output/lattice_riesz.mat');
 cubeVectors = zeros(dim, oct);                                                                
 for i=1:dim
     len = 2 ^ (dim-i);
@@ -100,13 +85,14 @@ end
 
 Density = densityF(reshape(bsxfun(@plus,cubeVectors(:),repmat(cornersUsed,oct,1) ),dim,[]));
 cornersAveragedDensity = mean(reshape(Density,oct,[]),1);
-currentNumNodes = num_radius(cornersAveragedDensity*N/A);
+currentNumNodes = num_radius(cornersAveragedDensity*N/A, 'riesz');
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Place centers into empty boxes
-centersEmpty = cornersUsed(:, ~currentNumNodes) + A/2/N;
+fillingIndices = ~currentNumNodes & (cornersAveragedDensity*N/A > 1.5);
+centersEmpty = cornersUsed(:, fillingIndices) + A/2/N;
 centersEmptyDensity = densityF(centersEmpty);
-[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity,'descend');
+[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity,'ascend');
 sortedCentersEmpty = centersEmpty(:,sortEmpty);
 centersEmptyFill = false(1,size(sortedCentersEmpty,2));
 
@@ -148,16 +134,22 @@ for emptyIndex=1:emptynum
     end
 end
 I(sortEmpty) = I;
-currentNumNodes(~currentNumNodes) = double(centersEmptyFill(I));
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+currentNumNodes(fillingIndices) = double(centersEmptyFill(I));
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Place irrational lattices everywhere
+cubeShrink = 1  - currentNumNodes.^(-1/dim)/2;
+cubeShrink(currentNumNodes > 8) = 1  - currentNumNodes(currentNumNodes > 8).^(-1/dim)/sqrt(2);
+delta = (1-cubeShrink)/2;
+
 nodes = zeros(dim,sum(currentNumNodes));
-previousNodes = [0 cumsum(currentNumNodes)];
-    
+previousNodes = [0 cumsum(currentNumNodes)];    
+
 for i=1:size(cornersUsed,2)
-    J = 1:currentNumNodes(i);
-    box = A * cubeShrink * [mod(J/currentNumNodes(i) + .5,1);  mod(r1*J,1);  mod(r2*J,1)]/N;
-    box = bsxfun(@plus, cornersUsed(:,i)+ delta*A/N , box(randperm(dim),:));    
+    if ~currentNumNodes(i)
+        continue
+    end
+    box = A  * cubeShrink(i)  * ltable{currentNumNodes(i)}/N;
+    box = bsxfun(@plus, cornersUsed(:,i)+ delta(i) *A/N , box);    
     nodes(:,previousNodes(i)+1:previousNodes(i+1)) = box;   
 end
 toc
@@ -166,7 +158,8 @@ toc
 if ~exist('in_domainF','var') || ~isa(in_domainF,'function_handle')
     cnf = nodes;
 else
-    in_check = in_domainF(nodes(1,:), nodes(2,:), nodes(3,:));            
+    in_check = in_domainF(nodes(1,:), nodes(2,:), nodes(3,:));
+    sum(~in_check)
     % values of the density function
     cnf = nodes(:, in_check);                                                      
     % after removing nodes with zero density
@@ -183,8 +176,8 @@ toc
 fprintf('\n');
 
 %% Repel and save nodes
-kValue = 30;% ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = 40;
+kValue = 20;% ceil(max(log10( size(cnf,2) ).^2-5,12));
+repelSteps = 60;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
 if ~exist('in_domainF','var')
     in_domainF = 0;
@@ -195,11 +188,11 @@ end
 % Right density:
 rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
 dcompare(cnf, rdensity);
+
 figure(5);
 hold on;
 rcnf = sqrt(sum(cnf.*cnf,1));
 histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
-
 cnf = [cnf cnf_bdry];
 
 clear in_domainF;
@@ -210,6 +203,9 @@ cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domai
 figure(1);
 msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
+if ~usejava('desktop')
+     print('cnf','-dpdf','-r300','-bestfit')
+end
 xlabel('x')
 ylabel('y')
 zlabel('z')
@@ -227,6 +223,8 @@ dcompare(cnf, rdensity, 1);
 figure(5);
 rcnf = sqrt(sum(cnf.*cnf,1));
 histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
-% print('radial','-dpdf','-r300','-bestfit')
+if ~usejava('desktop')
+    print('radial','-dpdf','-r300','-bestfit')
+end
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
