@@ -10,7 +10,7 @@
 
 s_old = pwd;
 s = char(mfilename('fullpath'));
-cd(s(1:end-5))
+cd(s(1:end-17))
 addpath ..
 %
 cnf = node_earth;
@@ -120,6 +120,8 @@ hh.LineStyle=':';
 hh.LineWidth=1.5;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
+xlim([0, .04])
+ylim([0, .22])
 ylabel('Probability of the characteristic','FontSize',24);
 xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
 separation_surface = min(Dsurf(:,2))

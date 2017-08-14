@@ -1,13 +1,18 @@
 function  num = num_radius(r, varargin)
 %NUM_RADIUS 
-% num = num_radius(r)
+% num = num_radius(r,TYPE)
 % Returns the number of nodes in 3-dimensional unit cube, drawn from an
-% irrational lattice, such that the minimal separation of nodes between 27
-% such stacked cubes is approximately r (multiple copies are to account for
-% distances between neighboring cubes).
-% For specifics of how the nodes are picked from the lattice, and for the
-% scaling/shift we apply in each cube:
+% irrational lattice or the periodic Riesz minimizers, such that the mean 
+% separation of nodes between 27 such stacked cubes is approximately r 
+% (multiple copies are to account for distances between neighboring cubes).
+% r -- radius to be approximated;
+% TYPE -- (optional)is one of the string parameters: 'riesz', 'irrational';
+%   if no argument passed, the default 'irrational' is used.
+% 
+% For specifics of how the nodes are picked, and for the scaling/shift we 
+% apply in each cube:
 %   see also LATTICE_BY_COUNT, NODE_DIS.
+
 s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))
