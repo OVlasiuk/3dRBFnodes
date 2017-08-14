@@ -1,4 +1,4 @@
-function cnf = node_sh(cnf_bdry, densityF,in_domainF)
+function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 %NODE_SHELL
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
