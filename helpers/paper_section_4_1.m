@@ -1,14 +1,17 @@
-    %ANDES
-% Extracts and plots a piece of South-American coast next to the Andes,
-% using the output of node_earth.m
-% Also, computes and displays some statistics about the distribution of
-% distances to the first nearest neighbors (the exact number is adjusted by
-% *adjacency* option below), for the whole configuration, and for the 
-% surface nodes.
+%PAPER_SECTION_4_1
+% Reproduces the figures contained in Subsection 4.1 of the associated 
+% paper; in particular:
+%     Extracts and plots a piece of South-American coast next to the Andes,
+%     using the output of node_earth.m
+%     Also, computes and displays some statistics about the distribution of
+%     distances to the first nearest neighbors (the exact number is 
+%     adjusted by *adjacency* option below), for the whole configuration, 
+%     and for the surface nodes.
 % 
-%      See also  NODE_EARTH, IN_DOMAIN
+% See also  NODE_EARTH, IN_DOMAIN
 
 s_old = pwd;
+
 s = char(mfilename('fullpath'));
 cd(s(1:end-17))
 addpath ..
@@ -100,7 +103,7 @@ for i=2:adjacency
     hcnf = histogram(Dcnf(:,i),bins,'BinWidth',binwidth);
     hsurf = histogram(Dsurf(:,i),bins, 'BinWidth',binwidth);
     hcnf.EdgeAlpha=0;
-    hsurf.EdgeAlpha=1;
+    hsurf.EdgeAlpha=1; 
     hcnf.FaceAlpha = .4;
     hsurf.FaceAlpha = .1;
     hcnf.Normalization = 'probability';
@@ -120,10 +123,11 @@ hh.LineStyle=':';
 hh.LineWidth=1.5;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
-xlim([0, .04])
-ylim([0, .22])
-ylabel('Probability of the characteristic','FontSize',24);
+ylabel('Probability','FontSize',24);
 xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
+xlim([0, .04] )
+ylim([0, .28])
+box on
 separation_surface = min(Dsurf(:,2))
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -149,6 +153,7 @@ leg.FontSize = 16;
 leg.Location = 'southeast';
 xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
+set(gca,'FontSize',12)
 %
 figure(6)
 subplot(1,2,2)
@@ -187,5 +192,4 @@ zlabel('z')
 set(gca,'FontSize',12)
 view(az,el);grid on; axis vis3d;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% print('andes','-dpdf','-r300','-bestfit')
 cd(s_old)

@@ -10,9 +10,9 @@ end
 nFigs = length(get(0,'Children'));
 
 disp('Saving the following figures:')
-for thisFig=1:nFigs
-    figName = [name int2str(thisFig) '.pdf'];
+for thisFigNum=1:nFigs
+    figName = [name '_' int2str(thisFigNum) '.pdf'];
     disp(['   ' figName])
-    saveas(gcf, figName)
+    print(gcf, figName,'-dpdf','-r300','-bestfit')
     close
 end
