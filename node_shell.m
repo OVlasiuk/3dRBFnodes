@@ -22,7 +22,7 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 N = 65;                         % number of boxes per side of the cube
 maxNodesPerBox = 60;
 A = 6;          
-
+cutoffLength = 5e3;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % Specific to the atmodeling problems:
 a = 6371220;
@@ -34,7 +34,6 @@ rcap = @(r) a * exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
 rcapRad = rcap(a+ztop) / rcap(a);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-jitter = 0;                     % The amount of jitter to add to the repel procedure.
 dim = 3;                        
 oct = 2^dim;
 
@@ -101,14 +100,14 @@ emptynum = size(sortedCentersEmpty, 2)
 cutoff = 0;
 dlarge = inf;
 new = true;
-% cycles = 4e3;% [4e3 3e3 2e3 1e3]; 
+
 tic
 for emptyIndex=1:emptynum
     if ~any(centersEmptyFill)
         centersEmptyFill(emptyIndex) = true;
         continue
     end
-    if (mod(sum(centersEmptyFill), 5e3) == 1) && (sum(centersEmptyFill)>1) && new
+    if (mod(sum(centersEmptyFill), cutoffLength) == 1) && (sum(centersEmptyFill)>1) && new
 %         emptyIndex
 %         sum(centersEmptyFill)
         cutoff = emptyIndex-1;
@@ -197,7 +196,7 @@ cnf = [cnf cnf_bdry];
 
 clear in_domainF;
 in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF,jitter);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF);
 
 %% Plot the results
 figure(1);

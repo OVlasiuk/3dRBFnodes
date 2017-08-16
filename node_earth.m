@@ -28,7 +28,6 @@ repelPower = 4;
 oct = 2^dim;
 cubeShrink = 1 - maxNodesPerBox^(-1/dim)/8;
 delta = (1-cubeShrink)/2;
-r0 = exp(1)/2;
 r1 = sqrt(2);
 r2 = (sqrt(5)-1)/(sqrt(2));
 adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
@@ -53,7 +52,6 @@ end
 try 
     load('./Output/unit_lattice_radius.mat')
     if (cubeShrink ~= CUBE_SHRINK)...
-            || (r0 ~= R0)...
             || (r1 ~= R1)...
             || (r2 ~= R2)
         throw(MException('ReadTable:NoFile','I could not find the table of radii.'));
@@ -80,7 +78,7 @@ end
 % This example uses uniform distribution, so we may just as well
 % preallocate one voxel and reuse it for all corners.
 j = 1:maxNodesPerBox;
-voxel = A*cubeShrink * [mod(r0*j,1);  mod(r1*j,1);  mod(r2*j,1)]/N;       
+voxel = A*cubeShrink * [mod(j/maxNodesPerBox + .5,1);  mod(r1*j,1);  mod(r2*j,1)]/N;       
 voxel = voxel +  A*delta/N;
 
 
@@ -124,7 +122,7 @@ fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps,
 if ~exist('in_domainF','var')
     in_domainF = 0;
 end
-cnf = repel(cnf, size(cnf,2), kValue, repelSteps, A, in_domainF, 0, repelPower, 0);
+cnf = repel(cnf, size(cnf,2), kValue, repelSteps, A, in_domainF, 's', repelPower,'histogram',true);
  
 %% Plot the results
 pbaspect([1 1 1])
@@ -138,6 +136,8 @@ zlabel('z')
 set(gca,'FontSize',12)
 grid on;
 axis vis3d
+
+% collectfigs
 
 %% Plotting and diagnostic
 % figure(3);

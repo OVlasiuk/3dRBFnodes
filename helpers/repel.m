@@ -19,7 +19,7 @@ function cnf = repel(cnf,...
 % k_value -- the number of nearest neighbors used in the repel algorithm;
 % repel_steps -- iterations of the step process to be made;
 % densityF -- the target radial density: desired distance to the nearest 
-%   node;
+%   node; may be unstable if the function isn't Lip-1;
 % in_domainF -- domain checker; must take (x,y,z) as (arrays of) coordinates
 %   and return a boolean array of answers "in domain/not in the domain" for 
 %   each point. Pass 0 or nothing to not perform any domain checks.
@@ -30,11 +30,11 @@ function cnf = repel(cnf,...
 % 'jitter'      a number between 0 and 1 serving as a factor of a 
 %               random summand for the direction of repulsion.
 % 
-% 'pullbackF'   a mapping to use when pulling back nodes, pushed outside
+% 'pullback'    a mapping to use when pulling back nodes, pushed outside
 %               the domain by repulsion.
 % 
 % 'A'           sidelength of the outer bounding cube: the repel process 
-%               will be restricted to the 3-cube [-A/2, A/2]^3; default:
+%               will be restricted to the cube [-A/2, A/2]^dim; default:
 %               100;
 % 
 % 's'           the exponent used in the Riesz kernel; default: 4.0;
@@ -43,6 +43,11 @@ function cnf = repel(cnf,...
 %               the initial and post-repel distributions of the
 %               nearest-neighbor distances; default: false;
 % 
+% 'bins'        the number of bins to use in the histogram; default: 200;
+% 
+% 'offset'      offset in the arithmetic progression, dividing the nearest
+%               separation, that determines the step length; default: 18; 
+% 
 %   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
@@ -50,12 +55,10 @@ function cnf = repel(cnf,...
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Initialize variables
 dim = size(cnf,1);
-bins = 200;
-offset = 18;         % divides the minimal separation in the main loop
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-pnames = { 'jitter' 'pullbackF' 'A'     's'     'histogram'};
-dflts =  { 0            []      100.0   4.0     false};
-[jitter, pullbackF, A, s, htrue, ~] =...
+pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset'};
+dflts =  { 0            []      100.0   4.0     false       200    18};
+[jitter, pullbackF, A, s, htrue, bins, offset, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if jitter==0
@@ -119,13 +122,11 @@ for iter=1:repel_steps
         riesz_weights = compute_riesz(knn_norms_squared);
         weights = s*compute_weights(knn_density) .* riesz_weights ./ ...
                                                         knn_norms_squared;
-%         weights2 = s * riesz_weights .* compute_weights(knn_density)./knn_density;
     else
         weights = s*compute_riesz(knn_norms_squared)./knn_norms_squared;
     end
     
-    gradient = bsxfun(@times,weights,knn_differences);%  -...
-%                         bsxfun(@times, weights2,cnf_repeated./knn_rads);
+    gradient = bsxfun(@times,weights,knn_differences);
     gradient = reshape(gradient, dim, k_value, []);
     gradient = reshape(sum(gradient,2), dim, []);
     if isa(noise,'function_handle')
@@ -138,7 +139,7 @@ for iter=1:repel_steps
     if exist('in_domainF', 'var') && isa(in_domainF,'function_handle')
         domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
     else
-        domain_check = ~any((cnf_tentative<-A/2.0) + (cnf_tentative>A/2.0),1);
+        domain_check = ~any((cnf_tentative<-A/2.0) | (cnf_tentative>A/2.0),1);
     end
     if isa(pullbackF,'function_handle')
         cnf(:,~domain_check) = pullbackF(cnf_tentative(:,~domain_check)); 
@@ -164,4 +165,3 @@ if htrue
     xlabel('Distance to the nearest neighbor','FontSize',24);
     hold off;
 end
-% saveas(h2,'./Output/histogram.png');
