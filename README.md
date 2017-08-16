@@ -1,5 +1,8 @@
 # Boxed lattices for RBF computations
-<img src="https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/nodes.png" alt="Drawing" style="width: 200px;"/>
+<p align="center">
+<img src="https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/nodes.png" width="400">
+</p>
+
 ---
 This is a collection of Matlab routines for distributing nodes drawn from an irrational lattice with variable density. The principal application for such nodes are RBF-based PDE solvers. The algorithm processes the working domain by dividing it into a number of equal boxes and putting nodes with constant density in each of them, then applying a repel procedure using the hypersingular Riesz kernel. Currently only the 3-dimensional case is supported; it isn't difficult to make a higher-dimensional implementation along the same lines. Theoretic details will be described in a companion paper.
 
