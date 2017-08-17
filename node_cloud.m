@@ -100,7 +100,8 @@ for J = 1:10
     centersEmptyFill = false(1,size(sortedCentersEmpty,2));
 
     I = 1:size(sortedCentersEmpty, 2);
-    emptynum = size(sortedCentersEmpty, 2)
+    emptynum = size(sortedCentersEmpty, 2);
+    fprintf('Empty boxes found:\t\t%d\n', emptynum)
     cutoff = 0;
     dlarge = inf;
     new = true;
@@ -182,19 +183,22 @@ if ~exist('in_domainF','var')
 end
 
 in_domainF = 0;
-plback = @(v) pback(v, A);
+plback = @(v) pback(v, 'shape', 'cube', 'A', A);
 cnf = repel(cnf,size(cnf,2),kValue,repelSteps,densityF,in_domainF,'A',A,...
                         'pullback', plback);
 close all
 
+r = dcompare(cnf,densityF);
 
 rep = 1;   % (quantile(r, .97) > 1) &&
 while  rep < 10
     cnf = repel(cnf,size(cnf,2),kValue,repelSteps,densityF,in_domainF,'A',A,...
                         'pullback', plback);
     rep = rep + 1;
-    r = dcompare(cnf,densityF);
+    r = dcompare(cnf,densityF,'silent', true);
 end
+
+dcompare(cnf,@density_cloud,'plotit',1);
 
 %% Plot the results
 figure;
@@ -227,7 +231,6 @@ ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
 legend('Ratio','Difference');
 
 
-dcompare(cnf,@density_cloud,1);
 
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 

@@ -1,4 +1,4 @@
-function cnf = node_shell(cnf_bdry, densityF,in_domainF)
+function cnf = node_shell(cnf_bdry, densityF,in_domainF, A, Nr)
 %NODE_SHELL
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
@@ -19,43 +19,39 @@ function cnf = node_shell(cnf_bdry, densityF,in_domainF)
 
 % % % % % % % % % MAIN SCRIPT FOR NODE SETTING: VARIABLE DENSITY % % % % % % %
 %% % % % % % % % % % % % PARAMETERS  % % % % % % % % % % % % % % % % % % %
-N = 65;                         % number of boxes per side of the cube
-maxNodesPerBox = 60;
-A = 6;          
+dim = 3;                        
+oct = 2^dim;
+bins = 500;
+adjacency = (dim+1)*2^dim;      % the number of nearest boxes to consider
+N = 60;                         % number of boxes per side of the cube
+A = 2*A;          
 cutoffLength = 5e3;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % Specific to the atmodeling problems:
 a = 6371220;
 ztop = 12000;
-Ns = 12100;
-Nr = 30;
+Ns = size(cnf_bdry,2) / 2;
 ksep = @(Ns) sqrt(8*pi /Ns/sqrt(3)) ;
-rcap = @(r) a * exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
-rcapRad = rcap(a+ztop) / rcap(a);
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+rcap = @(r) exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
+rcapRad = rcap(a+ztop);
 
-dim = 3;                        
-oct = 2^dim;
-
-r1 = 6*pi;
-r2 = exp(1)/2;
-adjacency = (dim+1)*2^dim;              % the number of nearest boxes to consider
-close all;
-s = char(mfilename('fullpath'));
-cd(s(1:end-10))                         % cd to the mfile folder; 
-% The constant depends on the
-% length of the filename.
-addpath helpers/                                        
-if ~exist('Output','dir')
-    mkdir Output;
-end
+plback = @(v) pback(v, 'shape', 'shell', 'R', rcapRad);
 if ~exist('densityF','var')
     densityF=@(v)  ksep(Ns) * sqrt(sum(v.*v, 1))   ;
 end
 if ~exist('in_domainF','var')
     in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
 end
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% % % % % % % % % % % % % % % % % % ADJUST PATH % % % % % % % % % % % % % 
+s = char(mfilename('fullpath'));
+cd(s(1:end-10))                         % cd to the mfile folder; 
+addpath helpers/                                        
+if ~exist('Output','dir')
+    mkdir Output;
+end
 
+close all;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% MAIN
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -88,52 +84,57 @@ currentNumNodes = num_radius(cornersAveragedDensity*N/A, 'riesz');
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Place centers into empty boxes
-fillingIndices = ~currentNumNodes & (cornersAveragedDensity*N/A > 1.5);
-centersEmpty = cornersUsed(:, fillingIndices) + A/2/N;
-centersEmptyDensity = densityF(centersEmpty);
-[sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity,'ascend');
-sortedCentersEmpty = centersEmpty(:,sortEmpty);
-centersEmptyFill = false(1,size(sortedCentersEmpty,2));
+fillingIndices = (cornersAveragedDensity*N/A > 1.2);
 
-I = 1:size(sortedCentersEmpty, 2);
-emptynum = size(sortedCentersEmpty, 2)
-cutoff = 0;
-dlarge = inf;
-new = true;
+for J = 1:10
+    fillingIndices = ~currentNumNodes & fillingIndices;
+    centersEmpty = cornersUsed(:, fillingIndices) + A/2/N;
+    centersEmptyDensity = densityF(centersEmpty);
+    [sortedEmptyDensity, sortEmpty] = sort(centersEmptyDensity,'ascend');
+    sortedCentersEmpty = centersEmpty(:,sortEmpty);
+    centersEmptyFill = false(1,size(sortedCentersEmpty,2));
 
-tic
-for emptyIndex=1:emptynum
-    if ~any(centersEmptyFill)
-        centersEmptyFill(emptyIndex) = true;
-        continue
+    I = 1:size(sortedCentersEmpty, 2);
+    emptynum = size(sortedCentersEmpty, 2);
+    fprintf('Empty boxes found:\t\t%d\n', emptynum)
+    cutoff = 0;
+    dlarge = inf;
+    new = true;
+
+    tic
+    for emptyIndex=1:emptynum
+        if ~any(centersEmptyFill)
+            centersEmptyFill(emptyIndex) = true;
+            continue
+        end
+        if (mod(sum(centersEmptyFill), cutoffLength) == 1) && (sum(centersEmptyFill)>1) && new
+    %         emptyIndex
+    %         sum(centersEmptyFill)
+            cutoff = emptyIndex-1;
+            indlarge = centersEmptyFill & [true(1,cutoff),false(1,emptynum-cutoff)];
+            tic
+            ns = createns(sortedCentersEmpty(:,indlarge)', 'nsmethod','kdtree');
+            toc
+            new = false;
+        end
+        indsmall = centersEmptyFill & [false(1,cutoff),true(1,emptynum-cutoff)];
+        distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
+                                    sortedCentersEmpty(:, indsmall));
+        dsmall = min(sqrt(sum(distMatrix.*distMatrix,1)));           
+        if cutoff
+            [~, dlarge] = knnsearch(ns,sortedCentersEmpty(:,emptyIndex)');
+        end
+        if isempty(dsmall)
+            dsmall = dlarge;
+        end
+        if  (min(dsmall, dlarge) > (1 + (J-1)/20.0) * sortedEmptyDensity(emptyIndex))
+            centersEmptyFill(emptyIndex) = true;
+            new = true;
+        end
     end
-    if (mod(sum(centersEmptyFill), cutoffLength) == 1) && (sum(centersEmptyFill)>1) && new
-%         emptyIndex
-%         sum(centersEmptyFill)
-        cutoff = emptyIndex-1;
-        indlarge = centersEmptyFill & [true(1,cutoff),false(1,emptynum-cutoff)];
-        tic
-        ns = createns(sortedCentersEmpty(:,indlarge)', 'nsmethod','kdtree');
-        toc
-        new = false;
-    end
-    indsmall = centersEmptyFill & [false(1,cutoff),true(1,emptynum-cutoff)];
-    distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
-                                sortedCentersEmpty(:, indsmall));
-    dsmall = min(sqrt(sum(distMatrix.*distMatrix,1)));           
-    if cutoff
-        [~, dlarge] = knnsearch(ns,sortedCentersEmpty(:,emptyIndex)');
-    end
-    if isempty(dsmall)
-        dsmall = dlarge;
-    end
-    if  (min(dsmall, dlarge) > sortedEmptyDensity(emptyIndex))
-        centersEmptyFill(emptyIndex) = true;
-        new = true;
-    end
+    I(sortEmpty) = I;
+    currentNumNodes(fillingIndices) = double(centersEmptyFill(I));
 end
-I(sortEmpty) = I;
-currentNumNodes(fillingIndices) = double(centersEmptyFill(I));
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Place irrational lattices everywhere
 cubeShrink = 1  - currentNumNodes.^(-1/dim)/2;
@@ -158,13 +159,13 @@ if ~exist('in_domainF','var') || ~isa(in_domainF,'function_handle')
     cnf = nodes;
 else
     in_check = in_domainF(nodes(1,:), nodes(2,:), nodes(3,:));
-    sum(~in_check)
+    fprintf('The number of nodes removed:\t\t%d', sum(~in_check))
     % values of the density function
     cnf = nodes(:, in_check);                                                      
     % after removing nodes with zero density
 end
 
-%% Node stats
+%% Node stats & preliminary density recovery
 outtemp = length(cnf);
 fprintf( '\nNumber of nodes:      %d\n',  outtemp)
 fprintf( 'Boxes per side of the enclosing cube:      %d\n',  N)
@@ -173,57 +174,65 @@ fprintf( 'Max number of nodes per box:      %d\n', max(currentNumNodes ))
 fprintf( 'Min number of nodes per box:      %d\n', min(currentNumNodes ))
 toc
 fprintf('\n');
+disp('Density recovery before any repel')
+dcompare(cnf, densityF);
 
-%% Repel and save nodes
-kValue = 20;% ceil(max(log10( size(cnf,2) ).^2-5,12));
-repelSteps = 60;
+%% Repel nodes
+kValue = 30; % ceil(max(log10( size(cnf,2) ).^2-5,12));
+repelSteps = 20;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
-if ~exist('in_domainF','var')
-    in_domainF = 0;
-end
+ 
 if ~exist('cnf_bdry','var')
     cnf_bdry = [];
 end
-% Right density:
-rdensity = @(v)  ksep(Ns) * sqrt(sum(v.*v, 1));
-dcompare(cnf, rdensity);
-
-figure(5);
-hold on;
-rcnf = sqrt(sum(cnf.*cnf,1));
-histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
 cnf = [cnf cnf_bdry];
 
-clear in_domainF;
-in_domainF = @(x,y,z) in_shell(x,y,z,1,rcapRad);
-cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,rdensity,in_domainF);
+cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,...
+    'pullback',plback);
+
+disp('Density recovery after the first repel')
+r = dcompare(cnf,densityF);
+rep = 1;   % (quantile(r, .97) > 1) &&
+while (quantile(r, .97) > 1.05) && rep < 10
+    cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,'A',A,...
+                        'pullback', plback);
+    rep = rep + 1;
+    r = dcompare(cnf,densityF,'silent',true);
+end
 
 %% Plot the results
-figure(1);
+figure;
 msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
-if ~usejava('desktop')
-     print('cnf','-dpdf','-r300','-bestfit')
-end
 xlabel('x')
 ylabel('y')
 zlabel('z')
-set(gca,'FontSize',12)
-az = -101.5;
-el = 30;
-view(az,el);
 pbaspect([1 1 1])
 daspect([1 1 1])
+set(gca, 'Clipping', 'off')
+set(gca,'FontSize',12)
 grid on;
 axis vis3d
+
+if ~usejava('desktop')
+     print('cnf','-dpdf','-r300','-bestfit')
+end
 % 
 %% Density recovery
-dcompare(cnf, rdensity, 1);
-figure(5);
+dcompare(cnf, densityF, 'plotit', 1);
+%% Radial distribution recovery
+figure;
 rcnf = sqrt(sum(cnf.*cnf,1));
-histogram(rcnf((rcnf>1+.0001) & (rcnf< rcapRad - .0001)), 500);
+h1 = histogram(rcnf((rcnf>1+.001) & (rcnf< rcapRad - .001)), bins,'Normalization','probability');
+h1.FaceColor = [0.9 0 0];        % red
+h1.EdgeAlpha=.1;
+set(gca,'FontSize',12)
+ylabel('Probability','FontSize',24);
+xlabel('Radius','FontSize',24);
+
 if ~usejava('desktop')
     print('radial','-dpdf','-r300','-bestfit')
 end
+
 
 % dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
