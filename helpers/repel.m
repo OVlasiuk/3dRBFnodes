@@ -39,9 +39,14 @@ function cnf = repel(cnf,...
 % 
 % 's'           the exponent used in the Riesz kernel; default: 4.0;
 % 
+% 'instats'     a logical value for whether to compute the nearest-neighbor
+%               statistics for input; since the output is always processed,
+%               useful to disable in a loop, etc; default: true;
+% 
 % 'histogram'   a logical value indicating whether to produce histograms of
 %               the initial and post-repel distributions of the
-%               nearest-neighbor distances; default: false;
+%               nearest-neighbor distances; requires 'instats' to be true;
+%               default: false;
 % 
 % 'bins'        the number of bins to use in the histogram; default: 200;
 % 
@@ -56,9 +61,9 @@ function cnf = repel(cnf,...
 %% Initialize variables
 dim = size(cnf,1);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset'};
-dflts =  { 0            []      100.0   4.0     false       200    18};
-[jitter, pullbackF, A, s, htrue, bins, offset, ~] =...
+pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
+dflts =  { 0            []      100.0   4.0     false       200    18       true};
+[jitter, pullbackF, A, s, htrue, bins, offset, instats, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if jitter==0
@@ -87,15 +92,17 @@ end
 fprintf( '\nEntering the repel.m subroutine; a timer starts.\n\n')
 tic
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-[IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
-step = D(:,2);   
-fprintf( 'Minimal separation before repel steps:\t%3.8f\n', min(step))
-outtemp = mean(D(:,2));
-fprintf(   'Mean separation before repel steps:\t%3.8f\n\n',   outtemp)
+if instats
+    [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
+    IDX = IDX(:,2:end)';          % drop the trivial first column in IDX
+    step = D(:,2);   
+    fprintf( 'Minimal separation before repel steps:\t%3.8f\n', min(step))
+    outtemp = mean(D(:,2));
+    fprintf(   'Mean separation before repel steps:\t%3.8f\n\n',   outtemp)
+end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %% Histogram
-if htrue
+if htrue && instats
     fprintf('\n')
     F = figure;
     h1=histogram(D(:,2),bins,'Normalization','probability');
@@ -110,13 +117,12 @@ for iter=1:repel_steps
         [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
         IDX = IDX(:,2:end)';
     end
-    
+%% Vectors from nearest neighbors    
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
-%   k_value vectors pointing to each moving node from its k_value nearest 
-%   neighbors:
     knn_cnf = cnf(:,IDX);
-    knn_differences = cnf_repeated - knn_cnf;
+    knn_differences = cnf_repeated - knn_cnf;    
     knn_norms_squared = sum(knn_differences.*knn_differences,1); 
+%% Weights using radial density    
     if isa(densityF,'function_handle')
         knn_density =  densityF(knn_cnf);   
         riesz_weights = compute_riesz(knn_norms_squared);
@@ -125,10 +131,11 @@ for iter=1:repel_steps
     else
         weights = s*compute_riesz(knn_norms_squared)./knn_norms_squared;
     end
-    
+%% Sum up over the nearest neighbors    
     gradient = bsxfun(@times,weights,knn_differences);
     gradient = reshape(gradient, dim, k_value, []);
     gradient = reshape(sum(gradient,2), dim, []);
+%% Add noise and renormalize    
     if isa(noise,'function_handle')
         gradient = gradient + noise() * mean(sqrt(sum(gradient.*gradient,1)));
     end
@@ -136,6 +143,7 @@ for iter=1:repel_steps
     step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
     cnf_tentative = cnf(:,1:N_moving) +...
                             directions(:,1:N_moving).*step/(offset+iter-1); 
+%% Detect the domain                        
     if exist('in_domainF', 'var') && isa(in_domainF,'function_handle')
         domain_check = in_domainF( cnf_tentative(1,:), cnf_tentative(2,:), cnf_tentative(3,:));
     else

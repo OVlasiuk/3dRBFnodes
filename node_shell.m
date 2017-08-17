@@ -223,12 +223,20 @@ dcompare(cnf, densityF, 'plotit', 1);
 %% Radial distribution recovery
 figure;
 rcnf = sqrt(sum(cnf.*cnf,1));
-h1 = histogram(rcnf((rcnf>1+.001) & (rcnf< rcapRad - .001)), bins,'Normalization','probability');
-h1.FaceColor = [0.9 0 0];        % red
+h1 = histogram(rcnf, bins,'Normalization','probability');
+% Alternatively, look at (rcnf>1+.001) & (rcnf< rcapRad - .001) w/o spikes
+h1.FaceColor = [0 0 0.9];        % blue
 h1.EdgeAlpha=.1;
 set(gca,'FontSize',12)
 ylabel('Probability','FontSize',24);
 xlabel('Radius','FontSize',24);
+hold on;
+be = h1.BinEdges(1:end-1);
+tentative = 1./be/C;
+coeff = mean(h1.Values./tentative);
+plot(be, tentative*coeff,'-.r','LineWidth',4)
+xlim([.92 2.8])
+hold off
 
 if ~usejava('desktop')
     print('radial','-dpdf','-r300','-bestfit')
