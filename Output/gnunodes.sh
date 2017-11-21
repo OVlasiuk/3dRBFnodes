@@ -11,7 +11,7 @@ else
     else
         OUT="$2"
     fi
-    echo Writing to "$OUT#NUM.png".
+    echo Writing to "$OUT.png".
     gnuplot -e "filename='$1';"  -c ./gnunodes.plt
     #xdg-open $OUT
 fi

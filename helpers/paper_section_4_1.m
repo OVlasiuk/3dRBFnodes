@@ -142,7 +142,7 @@ separation_surface = min(Dsurf(:,2))
 % and the outliers are plotted individually using the '+' symbol.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 figure(6);
-subplot(1,2,1)
+h1 = subplot(1,2,1);
 hold on;
 boxplot(Dsurf) % ,'PlotStyle','compact'
 figure(6)
@@ -155,8 +155,8 @@ xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
 set(gca,'FontSize',12)
 %
-figure(6)
-subplot(1,2,2)
+f6 = figure(6);
+h2 = subplot(1,2,2);
 boxplot(Dcnf)
 hold on
 plot(max(Dcnf,[],1));
@@ -168,7 +168,17 @@ xlim([1 adjacency]);
 ylim([0 max(max(Dsurf))]);
 figure(6)
 set(gca,'FontSize',12)
-
+%
+p1=get(h1,'position');
+p2=get(h2,'position');
+hAxOuter=axes('position',[p1(1) p2(2) p2(1)+p2(3)-p1(1)  p1(2)+p1(4)-p2(2)], ...
+              'color','none','visible','off');
+hX=text(-0.065,0.5,'Distance','rotation',90,'fontsize',20, ...
+        'horizontalalignment','center','verticalalignment','bottom');
+hY=text(0.5, -0.05,'Nearest neighbor number','rotation',0,'fontsize',20, ...
+        'horizontalalignment','center','verticalalignment','top');
+% f6.PaperType = 'A2';
+% print(f6,'nearest_ns','-dpdf','-r300','-bestfit')
 
 % % % % % % % % % % % % % % % PLOTTING THE ANDES % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %

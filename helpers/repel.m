@@ -60,6 +60,7 @@ function cnf = repel(cnf,...
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Initialize variables
 dim = size(cnf,1);
+C = 0.034629556613235;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
 dflts =  { 0            []      100.0   4.0     false       200    18       true};
@@ -119,20 +120,23 @@ for iter=1:repel_steps
     end
 %% Vectors from nearest neighbors    
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
+    cnf_repeated_concentric = cnf_repeated./sqrt(sum(cnf_repeated.*cnf_repeated,1));
     knn_cnf = cnf(:,IDX);
     knn_differences = cnf_repeated - knn_cnf;    
     knn_norms_squared = sum(knn_differences.*knn_differences,1); 
-%% Weights using radial density    
+%% Weights using radial density
+    riesz_weights = compute_riesz(knn_norms_squared);
     if isa(densityF,'function_handle')
         knn_density =  densityF(knn_cnf);   
-        riesz_weights = compute_riesz(knn_norms_squared);
-        weights = s*compute_weights(knn_density) .* riesz_weights ./ ...
+        density_weights = compute_weights(knn_density);
+        weights = s*density_weights .* riesz_weights ./ ...
                                                         knn_norms_squared;
     else
-        weights = s*compute_riesz(knn_norms_squared)./knn_norms_squared;
+        weights = s*riesz_weights./knn_norms_squared;
     end
 %% Sum up over the nearest neighbors    
-    gradient = bsxfun(@times,weights,knn_differences);
+    gradient = bsxfun(@times,weights,knn_differences);% -...
+%                       s*riesz_weights .* density_weights./knn_density .* cnf_repeated_concentric; 
     gradient = reshape(gradient, dim, k_value, []);
     gradient = reshape(sum(gradient,2), dim, []);
 %% Add noise and renormalize    

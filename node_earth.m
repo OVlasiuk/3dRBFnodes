@@ -126,10 +126,10 @@ cnf = repel(cnf, size(cnf,2), kValue, repelSteps, A, in_domainF, 's', repelPower
  
 %% Plot the results
 pbaspect([1 1 1])
+daspect([1 1 1])
 figure(1);
 msize = ceil(max(1, 22-5*log10(size(cnf,2)) ));
 plot3(cnf(1,:), cnf(2,:), cnf(3,:),'.k','MarkerSize',msize);
-plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.k','MarkerSize',1);
 xlabel('x')
 ylabel('y')
 zlabel('z')
