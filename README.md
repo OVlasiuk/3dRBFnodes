@@ -1,10 +1,11 @@
 # Variable density 3-d nodes for RBF computations
+
 <p align="center">
-<img src="https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/nodes.png" width="300">
+<img src="https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/img/andes.png" width="300"> <img src="https://raw.githubusercontent.com/OVlasiuk/3dRBFnodes/master/img/andes_scatter.png" width="300">
 </p>
 
 ---
-This is a collection of Matlab routines for distributing nodes (discrete sets) with variable density. The nodes are drawn from a sequence of either periodic Riesz minimizers or irrational lattices, with variable number of elements. The principal application for such nodes are RBF-based PDE solvers. The algorithm processes the working domain by dividing it into a number of equal voxels and putting nodes with constant density in each of them, then applying a repel procedure using the weighted hypersingular Riesz kernel. Currently only the 3-dimensional case is supported; a higher-dimensional implementation can be produced by trivial adjustments to the present code. For theoretic details see the [companion paper][1].
+This is a collection of Matlab routines for distributing nodes (discrete sets) with variable density. The nodes are drawn from a sequence of either periodic Riesz minimizers or irrational lattices, with variable number of elements. The principal application for such sets are RBF-based PDE solvers. The algorithm processes the working domain by dividing it into a number of equal cube-shaped voxels and putting nodes with constant density in each of them, then applying a repel procedure using the weighted hypersingular Riesz kernel. Currently only the 3-dimensional case is supported; a higher-dimensional implementation can be produced by trivial adjustments to the present code. For theoretic details see the [companion paper][1].
 
 # Usage
 
@@ -12,10 +13,10 @@ The **RUNME** routine is intended to be the starting point for exploring the cod
 To see details about a specific function/script, type **help _name_of_the_function_** in Matlab prompt while in the 3dRBFnodes folder (it may be necessary to execute *RUNME.m* first to adjust the Matlab PATH).
 A number of parameters as well as the distribution density can be set in the preambles of **node_{example}.m** scripts. Executing either one of them adds the *helpers* folder to the Matlab path.
 All the helper functions are collected in the **./helpers** subfolder. The ones that are perhaps the easiest to use for generic purposes are:
-- repel
-- saturate
+- **repel** - spreads out a given configuration 'cnf' of size (dim) x (N) by moving it along the gradient flow of a weighted Riesz functional; supports generic domains and densities;
+- **saturate** - finds and fills Voronoi holes in a given configuration 'cnf' that are deeper than a certain density function; supports generic domains.
 
-The routines that have names starting with *paper_* will reproduce the figures in the corresponding section of the [paper][1]. It should be noted that the GPU helpers in **./helpers_gpu** are unstable (and almost certainly unusable) at the time of writing.
+The routines that have names starting with *paper_* will reproduce the figures in the corresponding section of the [paper][1]. It should be noted that the GPU helpers in **./helpers_gpu** are unstable (and most probably unusable) at the time of writing.
 
 # Contributors
 
