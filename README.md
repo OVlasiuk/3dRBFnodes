@@ -25,7 +25,7 @@ See [here](https://github.com/OVlasiuk/3dRBFnodes/graphs/contributors) for the l
 
 # References
 
-The accompanying paper can be found on the [arXiv][1].
+The accompanying paper, [Fast high-dimensional node generation with variable density][1], can be found on the arXiv.
 
 For a different approach to 2-dimensional distributions, see [Fast generation of 2-D node distributions for mesh-free PDE discretizations][2].
 
