@@ -33,10 +33,11 @@ For how to solve PDEs with RBFs, see [Solving PDEs with radial basis functions][
 
 About the underlying theory on Riesz energy functionals, see papers
 
-- Borodachov, S. V. Hardin, D. P. Saff, E. B.  Asymptotics for discrete weighted minimal Riesz energy problems on rectifiable sets.  Trans. Amer. Math. Soc.  360  (2008),  no. 3, 1559--1580. DOI:10.1090/S0002-9947-07-04416-9
-- Borodachov, S. V. Hardin, D. P. Saff, E. B.  Low complexity methods for discretizing manifolds via Riesz energy minimization.  Found. Comput. Math.  14  (2014),  no. 6, 1173--1208. DOI:10.1007/s10208-014-9202-3
-- Hardin, D. P. Saff, E. B.  Discretizing manifolds via minimum energy points.  Notices Amer. Math. Soc.  51  (2004),  no. 10, 1186--1194.
-- Hardin, D. P. Saff, E. B. Whitehouse, J. T.  Quasi-uniformity of minimal weighted energy points on compact metric spaces.  J. Complexity  28  (2012),  no. 2, 177--191. DOI:10.1016/j.jco.2011.10.009
+- Borodachov, S. V. Hardin, D. P. Saff, E. B.  [Asymptotics for discrete weighted minimal Riesz energy problems on rectifiable sets.](https://doi.org/10.1090/S0002-9947-07-04416-9)  Trans. Amer. Math. Soc.  360  (2008),  no. 3, 1559--1580.
+- Borodachov, S. V. Hardin, D. P. Saff, E. B.  [Low complexity methods for discretizing manifolds via Riesz energy minimization.](https://doi.org/10.1007/s10208-014-9202-3)  Found. Comput. Math.  14  (2014),  no. 6, 1173--1208.
+- Hardin, D. P. Saff, E. B.  [Discretizing manifolds via minimum energy points.](http://www.ams.org/notices/200410/fea-saff.pdf)  Notices Amer. Math. Soc.  51  (2004),  no. 10, 1186--1194.
+- Hardin, D. P. Saff, E. B. Vlasiuk, O. V.  [Generating point configurations via hypersingular Riesz energy with an external field.](https://doi.org/10.1137/16M107414X)  SIAM J. Math. Anal.  49  (2017),  no. 1, 646--673.
+- Hardin, D. P. Saff, E. B. Whitehouse, J. T.  [Quasi-uniformity of minimal weighted energy points on compact metric spaces.](https://doi.org/10.1016/j.jco.2011.10.009)  J. Complexity  28  (2012),  no. 2, 177--191. 
 
 [1]: https://arxiv.org/abs/1710.05011
 [2]: https://doi.org/10.1016/j.camwa.2015.01.009
