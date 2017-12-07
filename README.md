@@ -20,12 +20,11 @@ The routines that have names starting with *paper_* will reproduce the figures i
 
 # Contributors
 
-Based on the ideas of N. Flyer, B. Fornberg, T. Michaels, and O. Vlasiuk.
 See [here](https://github.com/OVlasiuk/3dRBFnodes/graphs/contributors) for the list of individual contributors to the source code.   
 
 # References
 
-The accompanying paper, [Fast high-dimensional node generation with variable density][1], can be found on the arXiv.
+The accompanying paper by N. Flyer, B. Fornberg, T. Michaels, and O. Vlasiuk [Fast high-dimensional node generation with variable density][1] can be found on the arXiv.
 
 For a different approach to 2-dimensional distributions, see [Fast generation of 2-D node distributions for mesh-free PDE discretizations][2].
 
@@ -38,6 +37,8 @@ About the underlying theory on Riesz energy functionals, see papers
 - Hardin, D. P. Saff, E. B.  [Discretizing manifolds via minimum energy points.](http://www.ams.org/notices/200410/fea-saff.pdf)  Notices Amer. Math. Soc.  51  (2004),  no. 10, 1186--1194.
 - Hardin, D. P. Saff, E. B. Vlasiuk, O. V.  [Generating point configurations via hypersingular Riesz energy with an external field.](https://doi.org/10.1137/16M107414X)  SIAM J. Math. Anal.  49  (2017),  no. 1, 646--673.
 - Hardin, D. P. Saff, E. B. Whitehouse, J. T.  [Quasi-uniformity of minimal weighted energy points on compact metric spaces.](https://doi.org/10.1016/j.jco.2011.10.009)  J. Complexity  28  (2012),  no. 2, 177--191. 
+
+For an even longer list, refer to Edward Saff's [webpage](https://my.vanderbilt.edu/edsaff/spheres-manifolds/) with the bibliography of applications of the Riesz functionals.
 
 [1]: https://arxiv.org/abs/1710.05011
 [2]: https://doi.org/10.1016/j.camwa.2015.01.009
