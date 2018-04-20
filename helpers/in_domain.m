@@ -4,7 +4,7 @@ function [is, radii] = in_domain(x, y, z)
 % Check if the point (x,y,z) lies in the atmosphere-like layer; uses ETOPO1
 % data and linear interpolation to compare the norm of (x,y,z) with that of
 % the Earth surface at the same values of spherical angles.
-% Output: 
+% output: 
 % is - logical array corresponding to indices of coordinates in x, y, z.
 % radii - values of the radius of Earth surface, produced by linear
 % interpolation of ETOPO1
@@ -20,12 +20,12 @@ cd(s(1:end-9))                          % cd to the mfile folder;
 persistent Z;
 if isempty(Z)
     try 
-        [Z, ~] = etopo('../Output');
+        [Z, ~] = etopo('../output');
         Z = Z';
     catch ME
         ME.message
         etopo1load;
-        [Z, ~] = etopo('../Output');
+        [Z, ~] = etopo('../output');
         Z = Z';
     end
 end

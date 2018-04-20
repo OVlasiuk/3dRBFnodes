@@ -20,11 +20,11 @@ cd(s(1:end-10))
 % persistent mtable;
 % if isempty(mtable)
 if isempty(varargin)
-    load('../Output/unit_lattice_radius.mat');
+    load('../output/unit_lattice_radius.mat');
 elseif any(varargin{:} == 'riesz')
-    load('../Output/mrtable_riesz.mat');    
+    load('../output/mrtable_riesz.mat');    
 elseif any(varargin{:} == 'irrational')
-    load('../Output/unit_lattice_radius.mat');
+    load('../output/unit_lattice_radius.mat');
 end
 % end
 num = interp1(mtable,1:numel(mtable),r,'pchip');

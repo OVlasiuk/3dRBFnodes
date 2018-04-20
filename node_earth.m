@@ -39,8 +39,8 @@ cd(s(1:end-10))                         % cd to the mfile folder;
                                         % The constant 12 depends on the
                                         % length of the filename.
 addpath helpers/                                                                                
-if ~exist('Output','dir')
-    mkdir Output;
+if ~exist('output','dir')
+    mkdir output;
 end
 if ~exist('densityF','var')
     densityF=@density_earth;
@@ -50,7 +50,7 @@ if ~exist('in_domainF','var')
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 try 
-    load('./Output/unit_lattice_radius.mat')
+    load('./output/unit_lattice_radius.mat')
     if (cubeShrink ~= CUBE_SHRINK)...
             || (r1 ~= R1)...
             || (r2 ~= R2)
@@ -166,4 +166,4 @@ axis vis3d
 
 
 % % % % % % % % % % % % % % % % % % % % 
-% dlmwrite('./Output/cnf_earth.txt',cnf','delimiter','\t','precision',10); %
+% dlmwrite('./output/cnf_earth.txt',cnf','delimiter','\t','precision',10); %
