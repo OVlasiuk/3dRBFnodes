@@ -14,9 +14,9 @@
 s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-14))
-load('../Output/lattice_riesz.mat')
-if exist('../Output/mrtable_riesz.mat','file')
-    load('../Output/mrtable_riesz.mat');
+load('../output/lattice_riesz.mat')
+if exist('../output/mrtable_riesz.mat','file')
+    load('../output/mrtable_riesz.mat');
 else
     mtable = ones(1,numel(ltable));
     rtable = ones(1,numel(ltable));
@@ -25,7 +25,7 @@ else
         mtable(N) = mean(D(:,2));
         rtable(N) = min(D(:,2));
     end
-    save('../Output/mrtable_riesz.mat', 'mtable','rtable')
+    save('../output/mrtable_riesz.mat', 'mtable','rtable')
 end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -65,8 +65,8 @@ markers = [
 'pk';
             ];
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-if exist('../Output/lattices_rational.mat','file')
-    load('../Output/lattices_rational.mat');
+if exist('../output/lattices_rational.mat','file')
+    load('../output/lattices_rational.mat');
 else
     lattices = zeros(size(ratios,1),num);
     minlattices = zeros(size(ratios,1),num);
@@ -74,7 +74,7 @@ else
         [lattices(I,:), minlattices(I,:)] = ...
             lattice_by_count(num,cubeShrink,ratios(I,1), ratios(I,2),'n');
     end
-    save('../Output/lattices_rational.mat', 'lattices','minlattices')
+    save('../output/lattices_rational.mat', 'lattices','minlattices')
 end
 [lmax, ind]=max(lattices,[],1);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 

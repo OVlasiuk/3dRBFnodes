@@ -3,7 +3,7 @@ function lattice_riesz
 % Finds and saves the periodic Riesz minimizers in the unit cube; by
 % default, the Riesz exponent is s=4.0. Also, generates the tables of mean
 % and minimal separation distances for the minimizers; these are saved as 
-% 'mrtable_riesz.mat' in the 'Output/' folder.
+% 'mrtable_riesz.mat' in the 'output/' folder.
 % The table of (coordinates of) minimizers is saved as a Matlab cell array
 % 'lattice_riesz.mat'.
 
@@ -32,8 +32,8 @@ end
 s_old = pwd;
 s = char(mfilename('fullpath'));
 cd(s(1:end-13))
-save('../Output/lattice_riesz.mat', 'ltable')
-save('../Output/mrtable_riesz.mat', 'mtable','rtable')
+save('../output/lattice_riesz.mat', 'ltable')
+save('../output/mrtable_riesz.mat', 'mtable','rtable')
 cd(s_old)
 
 

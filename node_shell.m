@@ -47,8 +47,8 @@ end
 s = char(mfilename('fullpath'));
 cd(s(1:end-10))                         % cd to the mfile folder; 
 addpath helpers/                                        
-if ~exist('Output','dir')
-    mkdir Output;
+if ~exist('output','dir')
+    mkdir output;
 end
 
 close all;
@@ -56,7 +56,7 @@ close all;
 %% MAIN
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Populate vertices of the unit cube 
-load('Output/lattice_riesz.mat');
+load('output/lattice_riesz.mat');
 cubeVectors = zeros(dim, oct);                                                                
 for i=1:dim
     len = 2 ^ (dim-i);
@@ -243,4 +243,4 @@ if ~usejava('desktop')
 end
 
 
-% dlmwrite('./Output/cnf.txt',cnf','delimiter','\t','precision',10); % 
+% dlmwrite('./output/cnf.txt',cnf','delimiter','\t','precision',10); % 
