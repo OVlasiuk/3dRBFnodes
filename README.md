@@ -16,6 +16,7 @@ All the helper functions are collected in **./helpers**. The ones that are perha
 - **repel** - spreads out a given configuration 'cnf' of size (dim) x (N) by moving it along the gradient flow of a weighted Riesz functional; supports generic domains and densities;
 - **saturate** - finds and fills Voronoi holes in a given configuration 'cnf' that are deeper than a certain density function; supports generic domains.
 
+Note that the execution of **node_earth** depends on the ETOPO1 data from the NOAA website; the **etopo1load** helper script downloads it automatically using the **curl** utility. In the case **curl** is not available on your system, save and unpack the [ETOPO1 archive](https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO1/data/bedrock/cell_registered/binary/etopo1_bed_c_i2.zip) into the **./output** directory. <br> 
 The routines that have names starting with *paper_* will reproduce the figures in the corresponding section of the [paper][1]. It should be noted that the GPU helpers in **./helpers_gpu** are unstable (and most probably unusable) at the time of writing.
 
 # Contributors

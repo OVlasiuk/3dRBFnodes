@@ -1,3 +1,4 @@
+
 function [mtable, rtable] = lattice_by_count(COUNT,CUBE_SHRINK, R1, R2, SAVE)
 %LATTICE_BY_COUNT 
 % rtable = lattice_by_count(COUNT, CUBE_SHRINK, R1, R2, SAVE)
