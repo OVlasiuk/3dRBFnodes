@@ -32,6 +32,7 @@ a = 6371220;
 ztop = 12000;
 Ns = size(cnf_bdry,2) / 2;
 ksep = @(Ns) sqrt(8*pi /Ns/sqrt(3)) ;
+C = ksep(Ns) * (Nr-1);
 rcap = @(r) exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
 rcapRad = rcap(a+ztop);
 
