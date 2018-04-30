@@ -9,10 +9,10 @@ function lattice_riesz
 
 
 options = optimoptions(@fmincon,'Algorithm','interior-point','SpecifyObjectiveGradient',true,...
-'Display','final','MaxFunctionEvaluations',10000,'MaxIterations',2000,'UseParallel',1);
-ltable = cell(1,30);
-
-parfor N=1:20
+'Display','off','MaxFunctionEvaluations',10000,'MaxIterations',2000,'UseParallel',1);
+ltable = cell(1,200);       % 200 is the maximal number of points per voxel in
+                            % the resulting sequence 
+parfor N=1:numel(ltable)
     A = [-eye(3*N); eye(3*N)];
     b = [zeros(3*N,1); ones(3*N,1)];
     Xinitial = rand(3,N);
