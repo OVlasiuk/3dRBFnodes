@@ -1,5 +1,96 @@
-function cnf = node_shell(cnf_bdry, densityF,in_domainF, A, Nr)
-%NODE_SHELL
+%% Node shell initialization
+clear;
+
+a = 6371220;
+ztop = 12000;
+Ns = 12100;
+Nr = 30;
+ksep = @(Ns) sqrt(8*pi /Ns/sqrt(3)) ;
+C = ksep(Ns) * (Nr-1); 
+rcap = @(r) a * exp( sqrt(8*pi/Ns/sqrt(3)) * (r-a) *(Nr-1)/ztop);
+rcapRad = rcap(a+ztop) / rcap(a);
+in_sh  = @(x,y,z) in_shell(x,y,z,1,rcapRad);
+rdensity = @(v) ksep(Ns)*sqrt(sum(v.*v,1));
+
+cnf1 = dlmread('./output/cnf12100');
+cnfsurf = [cnf1 cnf1*rcapRad];
+
+cnf = node_shell_main(cnfsurf, rdensity, in_sh, rcapRad, Nr);
+disp('The main routine finished.')
+toc
+
+cnfI = cnf(:,1:end-size(cnfsurf,2));
+whos cnfI cnf;
+r = dcompare(cnfI, rdensity);
+cnfD = cnfI;
+
+for i=1:3
+    r = dcompare(cnfD, rdensity);
+    cnfD = cnfD(:, (r < 1.3) );   
+    whos cnfD;
+end
+
+cnfD = [cnfD cnfsurf];
+whos cnfD;
+
+%% % % % % % % % % % % POST-PROCESSING: HOLE REMOVAL % % % % % % % % % % % %
+
+disp('Removing deep Voronoi holes.')
+[V,~] = voronoin(cnfD');
+V = V(in_sh(V(:,1),V(:,2),V(:,3)),:); 
+[~, holedepths] = knnsearch(cnfD',V);
+good_inds = (rdensity(V') < holedepths');
+Vg = V(good_inds,:);
+
+[sortedDists, sortHoles] = sort(holedepths(good_inds),'descend');
+sortedVg = Vg(sortHoles,:);
+sortedDensity = rdensity(sortedVg');
+numHoles = size(sortedVg,1)
+holeFill = false(1, numHoles);
+new = true;
+cutoff = 0;
+
+for holeInd =1:numHoles
+    if ~any(holeFill)
+        holeFill(holeInd) = true;
+        continue
+    end
+    if (mod(sum(holeFill), 5e3) == 1) && (sum(holeFill)>1) && new
+        %         emptyIndex
+        %         sum(holeFill)
+        cutoff = emptyIndex-1;
+        indlarge = holeFill & [true(1,cutoff),false(1,numHoles-cutoff)];
+        tic
+        ns = createns(sortedVg(:,indlarge)', 'nsmethod','kdtree');
+        toc
+        new = false;
+    end
+    indsmall = holeFill & [false(1,cutoff),true(1,numHoles-cutoff)];
+    distMatrix = bsxfun(@minus, sortedVg(holeInd,:), sortedVg(indsmall,:))';
+    dsmall = min(sqrt(sum(distMatrix.*distMatrix,1))); 
+    if cutoff
+        [~, dlarge] = knnsearch(ns,sortedVg(holeInd,:));
+    end
+    if isempty(dsmall)
+        dsmall = sortedDists(holeInd);
+    end
+    d = min([dsmall, dlarge, sortedDists(holeInd)]);
+    if  (sortedDensity(holeInd) <   d)
+        holeFill(holeInd) = true;
+    end
+end
+sum(holeFill)
+Vnew = sortedVg(holeFill,:);
+cnfD = [cnfD Vnew'];
+
+disp('Hole removal finished')
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+dcompare(cnfD, rdensity);
+pt_analyzer(cnfD,in_sh, 1);
+
+%% % % % % % % % % % % Main function body % % % % % % % % % % % % % % % % %
+function cnf = node_shell_main(cnf_bdry, densityF,in_domainF, A, Nr)
+%NODE_SHELL_MAIN
 % cnf = node_dis(densityF,in_domainF)
 % Distributes nodes with the variable density (locally defining the
 % distance to the nearest neighbor) given by the handle densityF: a 
@@ -109,8 +200,8 @@ for J = 1:10
             continue
         end
         if (mod(sum(centersEmptyFill), cutoffLength) == 1) && (sum(centersEmptyFill)>1) && new
-    %         emptyIndex
-    %         sum(centersEmptyFill)
+            %         emptyIndex
+            %         sum(centersEmptyFill)
             cutoff = emptyIndex-1;
             indlarge = centersEmptyFill & [true(1,cutoff),false(1,emptynum-cutoff)];
             tic
@@ -120,7 +211,7 @@ for J = 1:10
         end
         indsmall = centersEmptyFill & [false(1,cutoff),true(1,emptynum-cutoff)];
         distMatrix = bsxfun(@minus, sortedCentersEmpty(:,emptyIndex),...
-                                    sortedCentersEmpty(:, indsmall));
+        sortedCentersEmpty(:, indsmall));
         dsmall = min(sqrt(sum(distMatrix.*distMatrix,1)));           
         if cutoff
             [~, dlarge] = knnsearch(ns,sortedCentersEmpty(:,emptyIndex)');
@@ -182,21 +273,21 @@ dcompare(cnf, densityF);
 kValue = 30; % ceil(max(log10( size(cnf,2) ).^2-5,12));
 repelSteps = 20;
 fprintf( 'Performing %d repel steps using %d nearest neighbors.\n',  repelSteps, kValue)
- 
+
 if ~exist('cnf_bdry','var')
     cnf_bdry = [];
 end
 cnf = [cnf cnf_bdry];
 
 cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,...
-    'pullback',plback);
+'pullback',plback);
 
 disp('Density recovery after the first repel')
 r = dcompare(cnf,densityF);
 rep = 1;   % (quantile(r, .97) > 1) &&
 while (quantile(r, .97) > 1.05) && rep < 10
     cnf = repel(cnf,size(cnf,2)-size(cnf_bdry,2),kValue,repelSteps,densityF,in_domainF,'A',A,...
-                        'pullback', plback);
+    'pullback', plback);
     rep = rep + 1;
     r = dcompare(cnf,densityF,'silent',true);
 end
@@ -243,5 +334,5 @@ if ~usejava('desktop')
     print('radial','-dpdf','-r300','-bestfit')
 end
 
-
+end
 % dlmwrite('./output/cnf.txt',cnf','delimiter','\t','precision',10); % 
