@@ -45,7 +45,8 @@ Vg = V(good_inds,:);
 [sortedDists, sortHoles] = sort(holedepths(good_inds),'descend');
 sortedVg = Vg(sortHoles,:);
 sortedDensity = rdensity(sortedVg');
-numHoles = size(sortedVg,1)
+numHoles = size(sortedVg,1);
+disp("Detected holes: " + string(numHoles))
 holeFill = false(1, numHoles);
 new = true;
 cutoff = 0;
@@ -79,7 +80,7 @@ for holeInd =1:numHoles
         holeFill(holeInd) = true;
     end
 end
-sum(holeFill)
+disp("Holes filled: " + string(sum(holeFill) )
 Vnew = sortedVg(holeFill,:);
 cnfD = [cnfD Vnew'];
 
