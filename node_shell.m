@@ -80,7 +80,7 @@ for holeInd =1:numHoles
         holeFill(holeInd) = true;
     end
 end
-disp("Holes filled: " + string(sum(holeFill) )
+disp("Holes filled: " + string(sum(holeFill)) )
 Vnew = sortedVg(holeFill,:);
 cnfD = [cnfD Vnew'];
 
