@@ -10,6 +10,7 @@ cd(s(1:end-15))
 %% Initialize
 m  = 5;                     % Power in RBFs
 d  = 2;                     % Use up through degree d tems
+maxK = 100;                 % Maximal number of nodes in the stencil
 % Riesz
 nodes_riesz = dlmread('../output/riesz1k.txt');
 N = size(nodes_riesz,1);
@@ -28,8 +29,8 @@ ktree_halton = createns(nodes_halton,'nsmethod','kdtree');
 ktree_cart = createns(nodes_cart,'nsmethod','kdtree');
 
 %% Compute weights
+rng(5);                     % Specify seed for reproducible results
 C = [.5 .5 .5] + randn(1,3)*5e-2; 
-maxK = 100;
 condition_numbers = ones(maxK, 3);
 
 for k = 1:maxK
@@ -48,14 +49,15 @@ end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 markers = [
-'ok';
-'+k';
-'*k';
-% 'sk';
+'v ';
+'* ';
+'s ';
+'sk';
+'vk';
             ];
         
-legend_string = cell(1,2);
-legend_string{1} = "Periodic Riesz optimizers";
+legend_string = cell(1,3);
+legend_string{1} = "Periodic Riesz minimizers";
 legend_string{2} = "Halton nodes";
 legend_string{3} = "Cartesian nodes";
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -64,13 +66,16 @@ f1 = figure;
 f1.PaperType = 'A2';
 hold on;
 
-plot(condition_numbers(:,1), markers(1),'MarkerSize',6)
-plot(condition_numbers(:,2), markers(2),'MarkerSize',6)
-plot(condition_numbers(:,3), markers(3),'MarkerSize',6)
+plot(1:maxK, condition_numbers(:,1), markers(1,:),'MarkerSize',6,...
+    'MarkerEdgeColor', [0.6350    0.0780    0.1840])
+plot(1:maxK, condition_numbers(:,2), markers(2,:),'MarkerSize',6,...
+    'MarkerEdgeColor', [0    0.4470    0.7410])
+plot(1:maxK, condition_numbers(:,3), markers(3,:),'MarkerSize',6,...
+    'MarkerEdgeColor', [0.4660    0.6740    0.1880])
 
 set(gca, 'YScale', 'log')
 set(gca,'FontSize',12)
-xlabel('Nearest neighbors in the stencil','FontSize',20);
+xlabel('Number of nearest nodes in the stencil','FontSize',20);
 ylabel('Condition number of RBF-FD PHS-poly','FontSize',20);
 
 [leg, ico] = legend(legend_string{:});
