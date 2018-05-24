@@ -29,7 +29,7 @@ ktree_halton = createns(nodes_halton,'nsmethod','kdtree');
 ktree_cart = createns(nodes_cart,'nsmethod','kdtree');
 
 %% Compute weights
-% rng(5);                     % Specify seed for reproducible results
+rng(5);                     % Specify seed for reproducible results
 condition_numbers = zeros(maxK, 3);
 IT = 400;
 for it=1:IT
@@ -69,12 +69,13 @@ close all;
 f1 = figure;
 f1.PaperType = 'A2';
 hold on;
+lower_cardinality = 20;
 
-plot(1:maxK, condition_numbers(:,1), markers(1,:),'MarkerSize',6,...
+plot(lower_cardinality:maxK, condition_numbers(lower_cardinality:end,1), markers(1,:),'MarkerSize',6,...
     'MarkerEdgeColor', [0.6350    0.0780    0.1840])
-plot(1:maxK, condition_numbers(:,2), markers(2,:),'MarkerSize',6,...
+plot(lower_cardinality:maxK, condition_numbers(lower_cardinality:end,2), markers(2,:),'MarkerSize',6,...
     'MarkerEdgeColor', [0    0.4470    0.7410])
-plot(1:maxK, condition_numbers(:,3), markers(3,:),'MarkerSize',6,...
+plot(lower_cardinality:maxK, condition_numbers(lower_cardinality:end,3), markers(3,:),'MarkerSize',6,...
     'MarkerEdgeColor', [0.4660    0.6740    0.1880])
 
 set(gca, 'YScale', 'log')
