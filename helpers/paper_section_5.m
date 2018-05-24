@@ -29,25 +29,28 @@ ktree_halton = createns(nodes_halton,'nsmethod','kdtree');
 ktree_cart = createns(nodes_cart,'nsmethod','kdtree');
 
 %% Compute weights
-rng(5);                     % Specify seed for reproducible results
+% rng(5);                     % Specify seed for reproducible results
+condition_numbers = zeros(maxK, 3);
+IT = 400;
+for it=1:IT
 C = [.5 .5 .5] + randn(1,3)*5e-2; 
-condition_numbers = ones(maxK, 3);
-
-for k = 1:maxK
-    idx_riesz = knnsearch(ktree_riesz, C,'k',k);
-    condition_numbers(k, 1) = RBF_FD_PHS_pol_condnum(nodes_riesz(idx_riesz,:), m, d);
-    %
-    idx_halton = knnsearch(ktree_halton, C,'k',k);
-    condition_numbers(k, 2) = RBF_FD_PHS_pol_condnum(nodes_halton(idx_halton,:), m, d);
-    %
-    idx_cart = knnsearch(ktree_cart, C,'k',k);
-    condition_numbers(k, 3) = RBF_FD_PHS_pol_condnum(nodes_cart(idx_cart,:), m, d);
+    for k = 1:maxK
+        idx_riesz = knnsearch(ktree_riesz, C,'k',k);
+        stencil_riesz = [C; nodes_riesz(idx_riesz,:)];
+        condition_numbers(k, 1) = condition_numbers(k, 1) + RBF_FD_PHS_pol_condnum(stencil_riesz, m, d);
+        %
+        idx_halton = knnsearch(ktree_halton, C,'k',k);
+        stencil_halton = [C; nodes_halton(idx_halton,:)];
+        condition_numbers(k, 2) = condition_numbers(k, 2) + RBF_FD_PHS_pol_condnum(stencil_halton, m, d);
+        %
+        idx_cart = knnsearch(ktree_cart, C,'k',k);
+        stencil_cart = [C; nodes_cart(idx_cart,:)];
+        condition_numbers(k, 3) = condition_numbers(k, 3) + RBF_FD_PHS_pol_condnum(stencil_cart, m, d);
+    end
 end
-
-
-
-
+condition_numbers = condition_numbers / IT;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Legend
 markers = [
 'v ';
 '* ';
@@ -61,6 +64,7 @@ legend_string{1} = "Periodic Riesz minimizers";
 legend_string{2} = "Halton nodes";
 legend_string{3} = "Cartesian nodes";
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Plotting
 close all;
 f1 = figure;
 f1.PaperType = 'A2';
