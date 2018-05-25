@@ -10,7 +10,7 @@ cd(s(1:end-15))
 %% Initialize
 m  = 5;                     % Power in RBFs
 d  = 2;                     % Use up through degree d tems
-maxK = 100;                 % Maximal number of nodes in the stencil
+maxK = 200;                 % Maximal number of nodes in the stencil
 % Riesz
 nodes_riesz = dlmread('../output/riesz1k.txt');
 N = size(nodes_riesz,1);
@@ -19,7 +19,7 @@ halton_obj = haltonset(3);           % Create Halton nodes throughout unit cube
 nodes_halton = halton_obj(1:N,:);
 % Cartesian
 N = 1e3;
-x = linspace(0, 1, ceil(N^(1/3)) );
+x = 0:N^(-1/3):1;
 [X,Y,Z] = meshgrid(x);
 nodes_cart = [X(:),Y(:),Z(:)];
 
@@ -31,7 +31,7 @@ ktree_cart = createns(nodes_cart,'nsmethod','kdtree');
 %% Compute weights
 rng(5);                     % Specify seed for reproducible results
 condition_numbers = zeros(maxK, 3);
-IT = 400;
+IT = 500;
 for it=1:IT
 C = [.5 .5 .5] + randn(1,3)*5e-2; 
     for k = 1:maxK
@@ -69,7 +69,7 @@ close all;
 f1 = figure;
 f1.PaperType = 'A2';
 hold on;
-lower_cardinality = 20;
+lower_cardinality = 100;
 
 plot(lower_cardinality:maxK, condition_numbers(lower_cardinality:end,1), markers(1,:),'MarkerSize',6,...
     'MarkerEdgeColor', [0.6350    0.0780    0.1840])
