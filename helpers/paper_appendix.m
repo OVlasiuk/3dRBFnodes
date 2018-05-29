@@ -100,7 +100,7 @@ legend_string = cell(1,size(ratios,1)+2);
 for i=1:size(ratios,1)
     legend_string{i} = legend_ratios(2*i-1)+ string(' and ') + legend_ratios(2*i);
 end
-legend_string{end-1} = string('Periodic Riesz optimizers');
+legend_string{end-1} = string('Periodic Riesz minimizers');
 legend_string{end} = string('n^{-1/d}');
 
 [leg, ico] = legend(legend_string{:});
